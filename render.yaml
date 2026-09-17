@@ -1,0 +1,77 @@
+services:
+  - type: web
+    name: voxbuddy-backend
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /
+    envVars:
+      # Real vendor keys — set these in the Render dashboard after the
+      # blueprint deploys (never commit real keys into this file, and this
+      # file itself is safe to commit since it has no secret values in it).
+      #
+      # Translation: defaults to "bedrock" (Amazon Bedrock, uses the
+      # AWS_* credentials below — no separate translation key needed).
+      # To use Gemini instead (e.g. a user's own Gemini API key), change
+      # value below to "gemini" and set GEMINI_API_KEY in the dashboard.
+      # "anthropic" (direct Anthropic API, not Bedrock) is also available.
+      - key: VOXBUDDY_TRANSLATION_PROVIDER
+        value: bedrock
+      - key: BEDROCK_MODEL_ID
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      # Shared by Bedrock translation, Polly TTS, DynamoDB history, and
+      # AWS Transcribe ASR (see backend/docs/AWS_INTEGRATION.md).
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: AWS_REGION
+        value: us-east-1
+      - key: VOXBUDDY_ASR_PROVIDER
+        value: assemblyai
+      - key: ASSEMBLYAI_API_KEY
+        sync: false
+      - key: VOXBUDDY_TTS_PROVIDER
+        value: elevenlabs
+      - key: ELEVENLABS_API_KEY
+        sync: false
+      # Leave both unset to start — OTP codes print to Render's log
+      # viewer, which is enough to test login yourself. Email and SMS
+      # are independent — see backend/.env.example for the full option
+      # list ("smtp" for email needs no third-party account beyond a
+      # mailbox; "fast2sms" for SMS avoids Brevo's separate paid SMS
+      # add-on requirement).
+      - key: VOXBUDDY_OTP_EMAIL_PROVIDER
+        sync: false
+      - key: VOXBUDDY_OTP_SMS_PROVIDER
+        sync: false
+      - key: VOXBUDDY_BREVO_API_KEY
+        sync: false
+      - key: VOXBUDDY_BREVO_SENDER_EMAIL
+        sync: false
+      - key: VOXBUDDY_SMTP_USERNAME
+        sync: false
+      - key: VOXBUDDY_SMTP_PASSWORD
+        sync: false
+      - key: VOXBUDDY_FAST2SMS_API_KEY
+        sync: false
+      #
+      # VOXBUDDY_PUBLIC_URL: set this to your own Render URL once you know
+      # it (Render assigns it after first deploy, e.g.
+      # https://voxbuddy-backend.onrender.com) — embeds the real app logo
+      # in OTP emails instead of a text wordmark fallback.
+      - key: VOXBUDDY_PUBLIC_URL
+        sync: false
+      # Optional: Google Sign-In alongside email/phone OTP. See
+      # backend/.env.example for where to get this (Google Cloud Console).
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      # Required for native app sign-in (see backend/.env.example).
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false

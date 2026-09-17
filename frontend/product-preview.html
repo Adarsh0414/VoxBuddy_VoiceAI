@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>VoxBuddy — Product Preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep: #0B0D14;
+    --bg-panel: #12151E;
+    --bg-raised: #171B27;
+    --ink: #EDEFF4;
+    --ink-muted: #8B90A3;
+    --ink-faint: #565B6D;
+    --self: #E8A94C;
+    --self-dim: #6b5535;
+    --partner: #4FD1C5;
+    --partner-dim: #2f5e59;
+    --line: #232838;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg-deep);
+    color: var(--ink);
+    font-family: 'Manrope', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 32px 16px 60px;
+  }
+
+  .meta-banner {
+    max-width: 420px;
+    width: 100%;
+    text-align: center;
+    margin-bottom: 24px;
+  }
+  .meta-banner .kicker {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .meta-banner p {
+    font-size: 13px;
+    color: var(--ink-muted);
+    line-height: 1.6;
+    margin-top: 8px;
+  }
+
+  /* Phone frame — collapses to full-bleed automatically on a real phone
+     viewport via the media query at the bottom. */
+  .phone {
+    width: 390px;
+    max-width: 100%;
+    height: 780px;
+    max-height: 82vh;
+    background: var(--bg-panel);
+    border-radius: 44px;
+    border: 1px solid var(--line);
+    box-shadow: 0 40px 80px -30px rgba(0,0,0,0.7);
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .notch {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 110px;
+    height: 22px;
+    background: #000;
+    border-radius: 14px;
+    z-index: 10;
+  }
+
+  .screen {
+    flex: 1;
+    display: none;
+    flex-direction: column;
+    padding: 56px 24px 28px;
+    position: relative;
+  }
+  .screen.active { display: flex; }
+
+  /* ---------- Screen 1: Setup ---------- */
+  .wordmark {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 28px;
+    letter-spacing: -0.01em;
+  }
+  .tagline {
+    font-size: 13px;
+    color: var(--ink-muted);
+    margin-top: 6px;
+    line-height: 1.5;
+  }
+
+  .setup-body { margin-top: 48px; display: flex; flex-direction: column; gap: 28px; }
+  .setup-step {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+  .setup-step .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--partner);
+    margin-top: 7px;
+    flex-shrink: 0;
+  }
+  .setup-step .step-title { font-size: 15px; font-weight: 600; }
+  .setup-step .step-desc { font-size: 13px; color: var(--ink-muted); margin-top: 3px; line-height: 1.5; }
+
+  .lang-picker {
+    margin-top: 8px;
+    display: flex;
+    gap: 8px;
+  }
+  .lang-chip {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    padding: 7px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    color: var(--ink-muted);
+  }
+  .lang-chip.selected {
+    border-color: var(--self);
+    color: var(--self);
+    background: rgba(232, 169, 76, 0.08);
+  }
+
+  .setup-cta {
+    margin-top: auto;
+    background: var(--self);
+    color: #14100a;
+    font-weight: 700;
+    font-size: 14px;
+    text-align: center;
+    padding: 15px;
+    border-radius: 14px;
+  }
+
+  /* ---------- Screen 2: Conversation Active (the actual signature) ---------- */
+  .convo-screen {
+    justify-content: space-between;
+    padding-top: 64px;
+  }
+  .convo-header {
+    text-align: center;
+  }
+  .convo-header .with {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .convo-header .partner-lang {
+    font-size: 15px;
+    color: var(--ink-muted);
+    margin-top: 6px;
+  }
+
+  .orb-stage {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(1px);
+  }
+  .orb.self {
+    width: 150px; height: 150px;
+    background: radial-gradient(circle at 35% 35%, var(--self), var(--self-dim) 70%);
+    left: 50%;
+    transform: translateX(-78%);
+    animation: breathe-self 3.4s ease-in-out infinite;
+    box-shadow: 0 0 60px -10px rgba(232,169,76,0.5);
+  }
+  .orb.partner {
+    width: 150px; height: 150px;
+    background: radial-gradient(circle at 65% 35%, var(--partner), var(--partner-dim) 70%);
+    left: 50%;
+    transform: translateX(-22%);
+    animation: breathe-partner 3.4s ease-in-out infinite;
+    animation-delay: 0.3s;
+    box-shadow: 0 0 60px -10px rgba(79,209,197,0.5);
+  }
+  @keyframes breathe-self {
+    0%, 100% { transform: translateX(-78%) scale(1); opacity: 0.9; }
+    50% { transform: translateX(-62%) scale(1.08); opacity: 1; }
+  }
+  @keyframes breathe-partner {
+    0%, 100% { transform: translateX(-22%) scale(1); opacity: 0.9; }
+    50% { transform: translateX(-38%) scale(1.08); opacity: 1; }
+  }
+
+  .convo-footer { text-align: center; }
+  .convo-footer .status-line {
+    font-size: 13px;
+    color: var(--ink-muted);
+  }
+  .convo-footer .phone-note {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10.5px;
+    color: var(--ink-faint);
+    margin-top: 10px;
+    letter-spacing: 0.02em;
+  }
+
+  /* ---------- Screen 3: Accessibility transcript ---------- */
+  .transcript-screen { padding-top: 48px; }
+  .transcript-title { font-size: 15px; font-weight: 700; }
+  .transcript-sub { font-size: 12px; color: var(--ink-faint); margin-top: 4px; }
+  .transcript-list {
+    margin-top: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    overflow-y: auto;
+  }
+  .bubble {
+    max-width: 82%;
+    padding: 10px 14px;
+    border-radius: 14px;
+    font-size: 13.5px;
+    line-height: 1.5;
+  }
+  .bubble.partner {
+    align-self: flex-start;
+    background: rgba(79, 209, 197, 0.12);
+    border: 1px solid rgba(79, 209, 197, 0.25);
+    border-bottom-left-radius: 4px;
+  }
+  .bubble.self {
+    align-self: flex-end;
+    background: rgba(232, 169, 76, 0.12);
+    border: 1px solid rgba(232, 169, 76, 0.25);
+    border-bottom-right-radius: 4px;
+  }
+  .bubble .orig { color: var(--ink-faint); font-size: 11px; margin-top: 4px; font-style: italic; }
+
+  /* ---------- Preview nav (meta-UI, NOT part of the in-product design) ---------- */
+  .preview-nav {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+  }
+  .preview-nav button {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    padding: 8px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--line);
+    background: transparent;
+    color: var(--ink-muted);
+    cursor: pointer;
+  }
+  .preview-nav button.active {
+    border-color: var(--ink);
+    color: var(--ink);
+  }
+
+  @media (max-width: 420px) {
+    body { padding: 0; }
+    .meta-banner { display: none; }
+    .phone {
+      width: 100vw;
+      height: 100vh;
+      max-height: 100vh;
+      border-radius: 0;
+      border: none;
+    }
+    .preview-nav {
+      position: fixed;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(11,13,20,0.85);
+      backdrop-filter: blur(6px);
+      padding: 6px;
+      border-radius: 24px;
+      z-index: 20;
+    }
+  }
+</style>
+</head>
+<body>
+
+  <div class="meta-banner">
+    <div class="kicker">Product Preview — not the dev dashboard</div>
+    <p>This is a mockup of the actual VoxBuddy app screens per the PRD's
+    "technology disappears" philosophy — separate from the CIE testing
+    dashboard at <code>/</code>. Nothing here is wired to the backend; it's
+    static, for visual direction only.</p>
+  </div>
+
+  <div class="phone">
+    <div class="notch"></div>
+
+    <!-- Screen 1: Setup -->
+    <div class="screen active" id="screen-setup">
+      <div class="wordmark">VoxBuddy</div>
+      <div class="tagline">Voice to voice, heart to heart,<br>bringing worlds together.</div>
+
+      <div class="setup-body">
+        <div class="setup-step">
+          <div class="dot"></div>
+          <div>
+            <div class="step-title">Connect your earbuds</div>
+            <div class="step-desc">Any Bluetooth earbuds work. No VoxBuddy hardware needed.</div>
+          </div>
+        </div>
+        <div class="setup-step">
+          <div class="dot"></div>
+          <div>
+            <div class="step-title">Your language</div>
+            <div class="step-desc">We'll auto-detect after this — just a starting point.</div>
+            <div class="lang-picker">
+              <div class="lang-chip selected">English</div>
+              <div class="lang-chip">हिन्दी</div>
+              <div class="lang-chip">Français</div>
+            </div>
+          </div>
+        </div>
+        <div class="setup-step">
+          <div class="dot"></div>
+          <div>
+            <div class="step-title">Put your phone away</div>
+            <div class="step-desc">That's it. Just talk — VoxBuddy handles the rest.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="setup-cta">Start talking</div>
+    </div>
+
+    <!-- Screen 2: Conversation Active — the actual signature screen -->
+    <div class="screen convo-screen" id="screen-convo">
+      <div class="convo-header">
+        <div class="with">Talking with</div>
+        <div class="partner-lang">Hindi speaker</div>
+      </div>
+
+      <div class="orb-stage">
+        <div class="orb self"></div>
+        <div class="orb partner"></div>
+      </div>
+
+      <div class="convo-footer">
+        <div class="status-line">Just talk naturally.</div>
+        <div class="phone-note">— that's the whole screen —</div>
+      </div>
+    </div>
+
+    <!-- Screen 3: Accessibility transcript (opt-in, reachable but never required) -->
+    <div class="screen transcript-screen" id="screen-transcript">
+      <div class="transcript-title">Live transcript</div>
+      <div class="transcript-sub">Optional — off by default during conversation</div>
+      <div class="transcript-list">
+        <div class="bubble partner">
+          Namaste, kitne ka hai yeh?
+          <div class="orig">Hindi → translated live</div>
+        </div>
+        <div class="bubble self">
+          This one is 200 rupees.
+        </div>
+        <div class="bubble partner">
+          Aap kahan se ho?
+          <div class="orig">Hindi → translated live</div>
+        </div>
+        <div class="bubble self">
+          I'm from France!
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="preview-nav">
+    <button class="active" data-screen="screen-setup">Setup</button>
+    <button data-screen="screen-convo">Conversation</button>
+    <button data-screen="screen-transcript">Transcript</button>
+  </div>
+
+  <script>
+    const buttons = document.querySelectorAll('.preview-nav button');
+    const screens = document.querySelectorAll('.screen');
+    buttons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        buttons.forEach(b => b.classList.remove('active'));
+        screens.forEach(s => s.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.screen).classList.add('active');
+      });
+    });
+  </script>
+</body>
+</html>

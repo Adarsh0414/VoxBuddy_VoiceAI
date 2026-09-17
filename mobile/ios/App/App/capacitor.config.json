@@ -1,0 +1,18 @@
+{
+	"appId": "com.voxbuddy.app",
+	"appName": "VoxBuddy",
+	"webDir": "www",
+	"server": {
+		"url": "https://voxbuddy-backend.onrender.com/app",
+		"cleartext": false
+	},
+	"android": {
+		"allowMixedContent": false
+	},
+	"packageClassList": [
+		"AppPlugin",
+		"CAPBrowserPlugin",
+		"StatusBarPlugin",
+		"BluetoothLe"
+	]
+}

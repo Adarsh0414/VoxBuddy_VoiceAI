@@ -1,0 +1,51 @@
+# Web server (serves API, WebSocket, and the frontend static files)
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+pydantic==2.9.2
+
+# Testing
+pytest==8.3.3
+httpx==0.28.1
+moto[dynamodb]==5.0.13   # mocks AWS (Polly, DynamoDB, S3, CloudWatch) in tests — no real AWS calls/costs
+
+# Real vendor adapters (see docs/vendor_decision.md).
+# 'anthropic' and 'google-genai' are alternative translation providers —
+# pick one via VOXBUDDY_TRANSLATION_PROVIDER, you don't need both installed
+# in production, but both are listed here so either works out of the box.
+# httpx is also used directly by otp_providers.py's real Brevo email/SMS
+# adapters (VOXBUDDY_OTP_PROVIDER=brevo) — otherwise only needed for tests.
+# assemblyai/elevenlabs are needed only once agents/asr_assemblyai.py and
+# agents/tts_elevenlabs.py are wired into session/manager.py (Phase 2+,
+# see the module docstrings in those files for what that work involves).
+python-dotenv==1.0.1
+anthropic==0.120.0
+google-genai==1.31.0
+google-auth==2.35.0
+assemblyai==0.64.32
+elevenlabs==2.59.0
+
+# AWS SDK — powers Amazon Polly (agents/tts_polly.py), DynamoDB
+# (persistence_dynamodb.py), CloudWatch custom metrics
+# (cie/cloudwatch_metrics.py), and the opt-in S3 calibration-data logger
+# (cie/calibration_log.py, cie/calibration.py). All are optional-at-
+# runtime (only imported lazily when selected via VOXBUDDY_TTS_PROVIDER=
+# polly / VOXBUDDY_PERSISTENCE_PROVIDER=dynamodb /
+# VOXBUDDY_CLOUDWATCH_METRICS=true / VOXBUDDY_CALIBRATION_LOGGING=true),
+# but boto3 itself needs to be installed for any of them to work.
+boto3==1.35.36
+
+# Amazon Transcribe streaming ASR (agents/asr_transcribe.py) — the AWS-
+# native ASR alternative. Only needed once VOXBUDDY_ASR_PROVIDER=aws_transcribe
+# is selected; imported lazily so it's not required for the default mocked
+# path or the assemblyai path. Separate package from boto3 (this is
+# awslabs' async streaming SDK, not the standard boto3 client, since
+# Transcribe's bidirectional streaming API isn't exposed through boto3).
+# NOTE: AWS has marked this package deprecated in favor of a new official
+# replacement (aws_sdk_transcribe_streaming), which is still pre-1.0 and
+# subject to breaking changes as of this writing — see asr_transcribe.py's
+# module docstring for why this one was still the right scaffolding target.
+amazon-transcribe==0.6.4
+
+# Optional: only needed if VOXBUDDY_SESSION_STORE=redis (see token_store.py).
+# The app runs fine without Redis installed at all — sqlite is the default.
+redis==5.2.1

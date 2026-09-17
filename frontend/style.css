@@ -1,0 +1,497 @@
+/* ===========================================================================
+   VoxBuddy — CIE Live Cockpit
+   Design language: a live signal-metering console, not a SaaS dashboard.
+   The whole point of this screen is to make an invisible fusion decision
+   (voice similarity + turn-taking + semantic coherence -> partner/bystander)
+   visible and legible in real time — so the visual vocabulary borrows from
+   audio meters and instrument panels: horizontal level meters, threshold
+   ticks, a lit VU-style gauge, monospace numeric readouts.
+   =========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+:root {
+  /* stage */
+  --stage: #0a0c10;
+  --panel: #12151b;
+  --panel-raised: #171c24;
+  --hairline: #232936;
+  --hairline-bright: #323a4a;
+  --text: #e9ecf1;
+  --muted: #8b93a3;
+  --dim: #565f70;
+
+  /* the three fusion signals — distinct hues, used ONLY for signal meters */
+  --sig-voice: #45d9c8;
+  --sig-turn: #ff9d5c;
+  --sig-semantic: #b48bff;
+
+  /* role colors — used ONLY for role badges/borders, never for signals */
+  --role-partner: #3ecf8e;
+  --role-bystander: #6b7280;
+  --role-self: #5b8cff;
+  --role-unknown: #f0b429;
+  --role-switch: #ff5c5c;
+
+  --radius: 3px;
+  --font-display: "Space Grotesk", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  background:
+    radial-gradient(1200px 600px at 15% -10%, #131824 0%, transparent 60%),
+    var(--stage);
+  color: var(--text);
+  font-family: var(--font-body);
+  margin: 0;
+  padding: 28px 32px 72px;
+}
+
+a { color: inherit; }
+
+/* -- header ---------------------------------------------------------- */
+
+.top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+header h1 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  margin: 0;
+  font-size: 24px;
+  letter-spacing: -0.01em;
+}
+
+header h1 .cockpit {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+header .sub {
+  color: var(--muted);
+  max-width: 620px;
+  font-size: 13.5px;
+  line-height: 1.55;
+  margin-top: 6px;
+}
+
+header .sub strong { color: var(--text); font-weight: 600; }
+
+.noise-pill {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--hairline-bright);
+  background: var(--panel-raised);
+  color: var(--muted);
+  white-space: nowrap;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.noise-pill.clean { color: var(--role-partner); border-color: color-mix(in srgb, var(--role-partner) 45%, var(--hairline-bright)); }
+.noise-pill.noisy { color: var(--role-unknown); border-color: color-mix(in srgb, var(--role-unknown) 45%, var(--hairline-bright)); }
+
+/* -- layout ------------------------------------------------------------ */
+
+main {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 18px;
+  margin-top: 22px;
+}
+
+@media (max-width: 880px) {
+  main { grid-template-columns: 1fr; }
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+}
+
+.panel-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--dim);
+  margin: 0 0 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.panel-label .count {
+  color: var(--muted);
+}
+
+/* -- controls panel ------------------------------------------------------ */
+
+label {
+  display: block;
+  font-size: 12.5px;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+
+label .hint { color: var(--dim); font-size: 11px; }
+
+label input[type="text"],
+label select {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  padding: 8px 10px;
+  background: var(--stage);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-size: 13.5px;
+  font-family: var(--font-mono);
+}
+
+label input[type="text"]:focus,
+label select:focus {
+  outline: 2px solid var(--sig-voice);
+  outline-offset: 1px;
+}
+
+label input[type="range"] {
+  width: 100%;
+  margin-top: 8px;
+  accent-color: var(--sig-turn);
+}
+
+.button-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+
+button {
+  background: var(--sig-voice);
+  color: #06181a;
+  border: none;
+  padding: 9px 15px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--font-body);
+}
+
+button.secondary {
+  background: transparent;
+  border: 1px solid var(--hairline-bright);
+  color: var(--text);
+  font-weight: 500;
+}
+
+button:hover { filter: brightness(1.08); }
+button:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+
+/* -- speaker roster ------------------------------------------------------ */
+
+#roster {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.roster-empty {
+  color: var(--dim);
+  font-size: 13px;
+  font-family: var(--font-mono);
+  padding: 8px 0;
+}
+
+.speaker-card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: var(--panel-raised);
+  border: 1px solid var(--hairline);
+  border-left: 3px solid var(--hairline-bright);
+  border-radius: var(--radius);
+}
+
+.speaker-card.role-partner { border-left-color: var(--role-partner); }
+.speaker-card.role-bystander { border-left-color: var(--role-bystander); opacity: 0.75; }
+.speaker-card.role-self { border-left-color: var(--role-self); }
+.speaker-card.role-unknown { border-left-color: var(--role-unknown); }
+
+.speaker-ring {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.speaker-id {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--text);
+}
+.speaker-meta {
+  font-size: 11px;
+  color: var(--dim);
+  margin-top: 2px;
+}
+.speaker-role-badge {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  padding: 3px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.speaker-role-badge.role-partner { color: var(--role-partner); background: color-mix(in srgb, var(--role-partner) 14%, transparent); }
+.speaker-role-badge.role-bystander { color: var(--role-bystander); background: color-mix(in srgb, var(--role-bystander) 14%, transparent); }
+.speaker-role-badge.role-self { color: var(--role-self); background: color-mix(in srgb, var(--role-self) 14%, transparent); }
+.speaker-role-badge.role-unknown { color: var(--role-unknown); background: color-mix(in srgb, var(--role-unknown) 14%, transparent); }
+.speaker-crown { color: var(--role-partner); font-size: 12px; margin-right: 4px; }
+
+/* -- fusion breakdown (hero) --------------------------------------------- */
+
+.fusion-panel {
+  grid-column: 1 / -1;
+  padding: 22px 24px 20px;
+}
+
+.fusion-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.fusion-title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--text);
+}
+.fusion-title .dim { color: var(--dim); font-weight: 500; }
+
+.fusion-speaker {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.meter-row {
+  display: grid;
+  grid-template-columns: 128px 1fr 92px;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+
+.meter-name {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+}
+
+.meter-track {
+  position: relative;
+  height: 9px;
+  background: var(--stage);
+  border-radius: 999px;
+  border: 1px solid var(--hairline);
+  overflow: hidden;
+}
+
+.meter-fill {
+  position: absolute;
+  inset: 0;
+  width: 0%;
+  border-radius: 999px;
+  transition: width 0.35s cubic-bezier(.2,.7,.3,1);
+}
+
+.meter-fill.voice { background: var(--sig-voice); }
+.meter-fill.turn { background: var(--sig-turn); }
+.meter-fill.semantic { background: var(--sig-semantic); }
+
+.meter-readout {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--dim);
+  text-align: right;
+  white-space: nowrap;
+}
+.meter-readout .val { color: var(--text); }
+
+.fusion-divider {
+  height: 1px;
+  background: var(--hairline);
+  margin: 16px 0 16px;
+}
+
+/* -- confidence gauge ----------------------------------------------------- */
+
+.gauge-row {
+  display: grid;
+  grid-template-columns: 128px 1fr 92px;
+  align-items: center;
+  gap: 14px;
+}
+
+.gauge-track {
+  position: relative;
+  height: 22px;
+  border-radius: var(--radius);
+  overflow: visible;
+  background:
+    linear-gradient(to right,
+      color-mix(in srgb, var(--role-bystander) 30%, transparent) 0%,
+      color-mix(in srgb, var(--role-bystander) 30%, transparent) var(--bystander-pct, 35%),
+      transparent var(--bystander-pct, 35%),
+      transparent var(--lock-pct, 62%),
+      color-mix(in srgb, var(--role-partner) 22%, transparent) var(--lock-pct, 62%),
+      color-mix(in srgb, var(--role-partner) 22%, transparent) 100%);
+  border: 1px solid var(--hairline);
+}
+
+.gauge-tick {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 2px;
+  background: var(--dim);
+}
+.gauge-tick.bystander { left: var(--bystander-pct, 35%); background: var(--role-bystander); }
+.gauge-tick.lock { left: var(--lock-pct, 62%); background: var(--role-partner); }
+
+.gauge-tick-label {
+  position: absolute;
+  top: 100%;
+  transform: translateX(-50%);
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  color: var(--dim);
+  margin-top: 4px;
+  white-space: nowrap;
+}
+
+.gauge-needle {
+  position: absolute;
+  top: -6px;
+  bottom: -6px;
+  width: 3px;
+  left: 0%;
+  background: var(--text);
+  border-radius: 2px;
+  transition: left 0.35s cubic-bezier(.2,.7,.3,1), background 0.2s;
+  box-shadow: 0 0 8px rgba(255,255,255,0.35);
+}
+.gauge-needle.role-partner { background: var(--role-partner); box-shadow: 0 0 10px color-mix(in srgb, var(--role-partner) 60%, transparent); }
+.gauge-needle.role-bystander { background: var(--role-bystander); box-shadow: none; }
+.gauge-needle.role-self { background: var(--role-self); }
+.gauge-needle.role-unknown { background: var(--role-unknown); }
+
+.gauge-readout {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 600;
+  text-align: right;
+}
+
+.fusion-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 22px;
+  flex-wrap: wrap;
+}
+
+.decision-note {
+  font-size: 12.5px;
+  color: var(--muted);
+  max-width: 620px;
+}
+.decision-note .switch-flag {
+  color: var(--role-switch);
+  font-weight: 600;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  margin-right: 8px;
+}
+
+.fusion-empty {
+  color: var(--dim);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  padding: 20px 0;
+}
+
+/* -- conversation log ----------------------------------------------------- */
+
+.log-panel { margin-top: 18px; }
+
+#log {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 380px;
+  overflow-y: auto;
+}
+
+.entry {
+  border-left: 3px solid var(--hairline-bright);
+  padding: 8px 12px;
+  background: var(--panel-raised);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  font-size: 13px;
+}
+
+.entry.system { color: var(--dim); font-family: var(--font-mono); font-size: 12px; border-left-color: var(--hairline); }
+.entry.partner { border-left-color: var(--role-partner); }
+.entry.bystander { border-left-color: var(--role-bystander); opacity: 0.7; }
+.entry.self { border-left-color: var(--role-self); }
+.entry.unknown { border-left-color: var(--role-unknown); }
+
+.entry .row1 {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 11px;
+  font-family: var(--font-mono);
+  margin-bottom: 4px;
+}
+.entry .role-badge { text-transform: uppercase; font-weight: 600; letter-spacing: 0.03em; }
+.entry.partner .role-badge { color: var(--role-partner); }
+.entry.bystander .role-badge { color: var(--role-bystander); }
+.entry.unknown .role-badge { color: var(--role-unknown); }
+.entry.self .role-badge { color: var(--role-self); }
+.entry .switch-badge { color: var(--role-switch); font-weight: 600; }
+.entry .text { color: var(--text); }
+.entry .translated { color: var(--sig-voice); margin-top: 4px; }

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VoxBuddy — CIE Live Cockpit</title>
+<link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <div class="top">
+    <header>
+      <h1>VoxBuddy <span class="cockpit">CIE Live Cockpit</span></h1>
+      <p class="sub">
+        ASR/Translation/TTS are mocked on this page — what's real is the
+        <strong>Conversation Intelligence Engine</strong> underneath. Every meter and
+        gauge below is driven by the actual signal-fusion values the engine used to
+        decide partner vs. bystander this turn, not a canned illustration.
+      </p>
+    </header>
+    <div id="noisePill" class="noise-pill clean">env: clean</div>
+  </div>
+
+  <main>
+    <section class="panel">
+      <p class="panel-label"><span>SEND AN UTTERANCE</span></p>
+      <label>Speaker label <span class="hint">(same label = same "voice")</span>
+        <input id="speakerLabel" type="text" value="shopkeeper" />
+      </label>
+
+      <label>Utterance text
+        <input id="utteranceText" type="text" value="namaste, kitne ka hai yeh?" />
+      </label>
+
+      <label>Target language
+        <select id="targetLang">
+          <option value="en" selected>en</option>
+          <option value="hi">hi</option>
+          <option value="fr">fr</option>
+        </select>
+      </label>
+
+      <label>Turn-taking fit <span id="ttVal">0.85</span>
+        <input id="turnTaking" type="range" min="0" max="1" step="0.05" value="0.85" />
+      </label>
+
+      <label>Semantic coherence <span id="cohVal">0.85</span>
+        <input id="coherence" type="range" min="0" max="1" step="0.05" value="0.85" />
+      </label>
+
+      <label>Ambient noise
+        <select id="noiseClass">
+          <option value="quiet" selected>quiet</option>
+          <option value="moderate">moderate</option>
+          <option value="loud_crowd">loud_crowd</option>
+        </select>
+      </label>
+
+      <div class="button-row">
+        <button id="sendBtn">Send utterance</button>
+        <button id="scenarioBtn" class="secondary">▶ Run market-stall scenario</button>
+        <button id="resetBtn" class="secondary">Reset session</button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <p class="panel-label"><span>SPEAKERS TRACKED</span> <span class="count" id="rosterCount">0</span></p>
+      <div id="roster"><div class="roster-empty">No speakers yet — send an utterance to enroll one.</div></div>
+    </section>
+
+    <section class="panel fusion-panel">
+      <div class="fusion-header">
+        <div class="fusion-title">Fusion breakdown <span class="dim">— why the last decision fired</span></div>
+        <div class="fusion-speaker" id="fusionSpeaker"></div>
+      </div>
+      <div id="fusionBody">
+        <div class="fusion-empty">Waiting for the first utterance...</div>
+      </div>
+    </section>
+  </main>
+
+  <section class="panel log-panel">
+    <p class="panel-label"><span>CONVERSATION LOG</span></p>
+    <div id="log"></div>
+  </section>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>

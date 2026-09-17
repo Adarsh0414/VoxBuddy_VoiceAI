@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme">
+        <activity
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode|navigation|density"
+            android:name=".MainActivity"
+            android:label="@string/title_activity_main"
+            android:theme="@style/AppTheme.NoActionBarLaunch"
+            android:launchMode="singleTask"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <!-- Google sign-in deep link: Google can only redirect to a real
+                 HTTPS URL (backend's /api/auth/google/callback), which then
+                 hands off to this scheme so Android reopens the already-
+                 running app (singleTask above) instead of the OS having
+                 nowhere to send the result. Handled in JS via
+                 App.addListener('appUrlOpen', ...). -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="voxbuddy" android:host="auth" />
+            </intent-filter>
+        </activity>
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/file_paths" />
+        </provider>
+
+        <!-- Started/stopped from JS around each conversation (see
+             ConversationServicePlugin.java + startConversation()/
+             stopMicCapture() in app-preview.html). foregroundServiceType
+             must match the FOREGROUND_SERVICE_MICROPHONE permission above. -->
+        <service
+            android:name=".ConversationForegroundService"
+            android:exported="false"
+            android:foregroundServiceType="microphone" />
+    </application>
+
+    <!-- Permissions -->
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Required for real microphone capture (getUserMedia inside the
+         WebView) — startMicCapture() in app-preview.html would otherwise
+         silently fail to get a stream once running as an installed app,
+         even though it works fine in a desktop browser. Modifier
+         permissions like this are exactly the kind of thing that only
+         shows up once you actually try the native build, not before. -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <!-- Actually scanning for earbuds (not just connecting to one already
+         paired) needs these two additionally — BLUETOOTH_SCAN for Android
+         12+ (with neverForLocation since this app doesn't use scan
+         results for location, which lets us skip the location-permission
+         dialog too), plus ACCESS_FINE_LOCATION for Android <12 where BLE
+         scanning is classified as a location-adjacent permission by the
+         OS regardless of what the app actually does with it. -->
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN"
+        android:usesPermissionFlags="neverForLocation"
+        tools:targetApi="s" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"
+        android:maxSdkVersion="30" />
+    <!-- Required to keep the mic/WebSocket pipeline running while a
+         conversation is active and the app is backgrounded — without a
+         foreground service, Android throttles/suspends the WebView's
+         background execution within seconds to minutes and can kill the
+         process outright under memory pressure, which is why listening
+         previously stopped as soon as the app left the foreground.
+         POST_NOTIFICATIONS is needed on Android 13+ to actually show the
+         persistent notification the foreground service is required to
+         display (Android has no "invisible background microphone" mode —
+         that's a deliberate privacy protection, not a limitation of this
+         app specifically). See ConversationForegroundService.java. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- ConversationForegroundService.java calls wakeLock.acquire() to
+         keep the CPU from sleeping mid-conversation — WAKE_LOCK is a
+         normal (not runtime-prompted) permission, but it still has to be
+         explicitly declared here or the OS throws a SecurityException
+         the instant the service starts, which is exactly what force-
+         closed the app on tapping "Start Conversation": the service
+         crashed before it ever got a chance to do anything, taking the
+         whole process down with it. -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+</manifest>

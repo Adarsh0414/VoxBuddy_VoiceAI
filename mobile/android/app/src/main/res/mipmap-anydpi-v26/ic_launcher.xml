@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Background must fill the full 108dp canvas with no inset — it's
+         what shows at the very edges once the launcher applies its own
+         mask shape (circle, squircle, teardrop, etc.), whatever that
+         shape turns out to be. Insetting it here (the previous config)
+         left transparent gaps in the corners on circular/squircle
+         launchers, since the shrunk square background never reached the
+         mask's outer edge. Only the foreground graphic needs padding,
+         to keep it clear of the safe-zone edge under every mask shape. -->
+    <background android:drawable="@mipmap/ic_launcher_background" />
+    <foreground>
+        <inset android:drawable="@mipmap/ic_launcher_foreground" android:inset="16.7%" />
+    </foreground>
+</adaptive-icon>

@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">VoxBuddy</string>
+    <string name="title_activity_main">VoxBuddy</string>
+    <string name="package_name">com.voxbuddy.app</string>
+    <string name="custom_url_scheme">com.voxbuddy.app</string>
+</resources>

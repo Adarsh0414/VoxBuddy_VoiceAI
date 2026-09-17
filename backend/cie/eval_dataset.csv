@@ -1,0 +1,11 @@
+sample_id,actual_speaker,turn_taking,coherence,noise_class,expect_role,expect_switch,age_seconds
+sample_001,A,0.90,0.90,quiet,partner,,
+sample_002,Noise,0.15,0.20,quiet,bystander,,
+sample_003,Noise,0.30,0.30,loud_crowd,bystander,,
+sample_004,Stranger,0.49,1.00,loud_crowd,bystander,,
+sample_005,C,0.90,0.90,quiet,partner,,
+sample_006,D,0.90,0.90,quiet,bystander,,
+sample_007,A,0.85,0.85,quiet,partner,,
+sample_008,C,0.85,0.90,quiet,partner,,
+sample_009,F,0.95,1.00,quiet,bystander,false,3
+sample_010,E,0.95,1.00,quiet,partner,true,8
