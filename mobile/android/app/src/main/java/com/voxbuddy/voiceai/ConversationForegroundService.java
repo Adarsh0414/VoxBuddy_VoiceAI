@@ -1,4 +1,4 @@
-package com.voxbuddy.app;
+package com.voxbuddy.voiceai;
 
 import android.app.Notification;
 import android.app.NotificationChannel;

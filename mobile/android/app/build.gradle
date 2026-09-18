@@ -1,10 +1,10 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace = "com.voxbuddy.app"
+    namespace = "com.voxbuddy.voiceai"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.voxbuddy.app"
+        applicationId "com.voxbuddy.voiceai"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

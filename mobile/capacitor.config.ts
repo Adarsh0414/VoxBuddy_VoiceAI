@@ -11,8 +11,8 @@ import type { CapacitorConfig } from '@capacitor/cli';
 // completed Step 1 of docs/PLAY_STORE_PUBLISHING.md (deploy to Render or
 // similar) — see docs/MOBILE_BUILD.md for the full picture.
 const config: CapacitorConfig = {
-  appId: 'com.voxbuddy.app',
-  appName: 'VoxBuddy',
+  appId: 'com.voxbuddy.voiceai',
+  appName: 'Voxbuddy_VoiceAi',
   webDir: 'www',
   server: {
     // "/app" — the bare domain root serves a separate internal CIE debug

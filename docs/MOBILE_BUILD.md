@@ -4,7 +4,7 @@
 
 **Android: real, built, installed, and tested on a physical device** — not
 just a generated scaffold anymore. `mobile/android` is a working Android
-Studio/Gradle project (`com.voxbuddy.app`) with real native code on top of
+Studio/Gradle project (`com.voxbuddy.voiceai`) with real native code on top of
 the Capacitor shell:
 
 - `AudioDevicePlugin.java` — detects an already-connected Bluetooth Classic
@@ -37,7 +37,7 @@ hand-written Swift — can get around that Apple platform requirement.
 mobile/
   capacitor.config.ts   <- points the native shell at your deployed backend
   android/               <- real Android Studio / Gradle project (built + tested)
-    app/src/main/java/com/voxbuddy/app/
+    app/src/main/java/com/voxbuddy/voiceai/
       AudioDevicePlugin.java
       ConversationForegroundService.java
       ConversationServicePlugin.java

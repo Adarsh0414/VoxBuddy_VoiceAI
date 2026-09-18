@@ -1,6 +1,6 @@
 {
-	"appId": "com.voxbuddy.app",
-	"appName": "VoxBuddy",
+	"appId": "com.voxbuddy.voiceai",
+	"appName": "Voxbuddy_VoiceAi",
 	"webDir": "www",
 	"server": {
 		"url": "https://voxbuddy-backend.onrender.com/app",
