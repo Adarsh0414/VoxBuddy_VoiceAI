@@ -48,7 +48,7 @@ bolted-on demo path. The sixth (S3 calibration logging) isn't a
 pipeline stage at all — it's an opt-in observability side-channel
 hanging off the same CIE call site, covered last below.
 
-### 0. Amazon Bedrock — translation (default provider)
+### 0. Amazon Bedrock — translation (implemented, blocked at the AWS account level — Gemini is the active provider)
 
 **File:** `backend/agents/translation_bedrock.py` (`BedrockTranslationAgent`)
 
@@ -60,31 +60,73 @@ Bedrock Runtime **Converse API** —
 `invoke_model`, since Converse's request/response shape is
 model-family-agnostic: pointing `BEDROCK_MODEL_ID` at a different model
 family (Anthropic, Amazon Nova, Meta, etc.) needs no code change here.
-
-`VOXBUDDY_TRANSLATION_PROVIDER` now **defaults to `bedrock`** (previously
-this had no default provider with a real implementation — `mock` was the
-zero-config default). Bedrock reuses the same `AWS_ACCESS_KEY_ID` /
-`AWS_SECRET_ACCESS_KEY` / `AWS_REGION` credentials already required for
-Polly, so it runs with zero extra config on an AWS-backed deployment.
 Same context-injection prompt design as the Anthropic/Gemini adapters
 (recent turn history resolves pronouns/ellipsis consistently, per FR-6 —
 see docs/vendor_decision.md §2).
 
-**Gemini stays available as an optional, secondary provider** — set
-`VOXBUDDY_TRANSLATION_PROVIDER=gemini` plus a `GEMINI_API_KEY` to use it
-instead, e.g. for a user who already has their own Gemini quota/pricing.
-Provider selection is explicit and never falls back silently: a
-misconfigured Bedrock (missing credentials, model not enabled for the
-account/region) raises a clear error rather than quietly retrying
-against Gemini.
+The code defaults `VOXBUDDY_TRANSLATION_PROVIDER` to `bedrock`, and
+Bedrock reuses the same `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` /
+`AWS_REGION` credentials already required for Polly, so it's genuinely
+zero-extra-config on an AWS-backed deployment — **in principle.** In
+practice, the deployed app overrides this default and runs with
+`VOXBUDDY_TRANSLATION_PROVIDER=gemini`, because subscribing to the
+underlying Bedrock model is blocked at the AWS account level, not by
+anything in this codebase. Full account-side troubleshooting log:
 
-Requires the `bedrock:InvokeModel` IAM permission, scoped to
-`BEDROCK_MODEL_ID`'s resource ARN (see "Setup" below) — **not yet
-included** in the currently-applied `voxbuddy-backend-policy`, so add it
-before deploying with Bedrock enabled. Also requires the chosen model to
-be enabled for the account/region under the Bedrock console's "Model
-access" page; an un-enabled model returns an `AccessDeniedException` at
-call time, not at startup.
+1. `AccessDeniedException` — IAM user/role not authorized for the
+   AWS Marketplace actions (`aws-marketplace:ViewSubscriptions`,
+   `aws-marketplace:Subscribe`) Bedrock needs to complete a third-party
+   model subscription. Fixed by adding those actions to
+   `voxbuddy-backend-policy`.
+2. Next error, reproduced directly in the Bedrock console Playground
+   (so it's not specific to our IAM user): `AccessDeniedException:
+   INVALID_PAYMENT_INSTRUMENT — a valid payment instrument must be
+   provided`. The AWS account had zero payment methods on file. Added
+   UPI AutoPay — didn't clear it, since AWS separately flagged the
+   account as unverified for Marketplace purposes ("Add a valid credit
+   card to verify the account"; UPI alone doesn't satisfy this). Added
+   a RuPay debit card specifically to clear that verification step,
+   and the "not verified" warning did go away.
+3. Even with IAM fixed, UPI AutoPay and a verified RuPay card both on
+   file, and account verification cleared, resubscribing to "Claude
+   Sonnet 4.6 (Amazon Bedrock Edition)" (Product ID
+   `prod-ffvjxvh4ltq64`) from **AWS Marketplace → Discover products**
+   still auto-terminates the agreement instantly — service start and
+   service end land on the identical timestamp, across five separate
+   attempts (`agmt-26ke1lcobnbghjv2ax3qnnulj`,
+   `agmt-2faci7i6mh8m4uu86kuv4iuvh`, `agmt-36zc6irds3x60xq0h5sb8qfwr`,
+   and two more) — with no reason surfaced anywhere in the console:
+   not on the subscribe confirmation, not on the agreement detail
+   page, not in AWS's own follow-up email.
+
+The account carries a live, AWS-confirmed $100 hackathon credit
+(WeMakeDevs, credit ID `10067457025`) whose service list explicitly
+includes Amazon Bedrock / Amazon Bedrock Service /
+AmazonBedrockFoundationModels — so this isn't a spend-limit or
+billing-eligibility problem either. Everything fixable from the console
+has been fixed; what's left is only visible from AWS's side, so it's
+filed as an AWS Support case (Billing/Marketplace category).
+
+**Gemini is the provider actually driving the deployed app** — set via
+`VOXBUDDY_TRANSLATION_PROVIDER=gemini` plus a `GEMINI_API_KEY`. It's the
+same integration that was VoxBuddy's original, real-device-tested
+translation path before the Bedrock adapter was added, so nothing about
+the CIE, ASR, TTS, or persistence layers had to change to fall back to
+it — swapping providers was a one-line env var change, not a rewrite,
+because of the shared `TranslationAgent` protocol both adapters
+implement. Provider selection is explicit and never falls back silently
+mid-run: a misconfigured provider (missing credentials, model not
+enabled) raises a clear error rather than quietly retrying against a
+different one.
+
+If the AWS Support case resolves, switching back is just
+`VOXBUDDY_TRANSLATION_PROVIDER=bedrock` — the adapter,
+IAM policy (`bedrock:InvokeModel` scoped to `BEDROCK_MODEL_ID`'s
+resource ARN, plus the `aws-marketplace:*` actions from step 1 above),
+and credentials are already in place and untouched. The chosen model
+also needs to be enabled for the account/region under the Bedrock
+console's "Model access" page; an un-enabled model returns an
+`AccessDeniedException` at call time, not at startup.
 
 ### 1. Amazon Polly — text-to-speech
 
@@ -292,11 +334,13 @@ See `backend/.env.example` for the exact environment variables
 `VOXBUDDY_CALIBRATION_BUCKET`, `VOXBUDDY_CALIBRATION_PREFIX`).
 
 **Currently applied** — the actual `voxbuddy-backend-policy` attached to
-the deployed IAM user covers Polly, Transcribe, and DynamoDB only (see
-`README.md` §6.5 for the exact statements with their `Sid`s). It does
-**not yet** include the `bedrock:InvokeModel` statement below — add it
-before deploying with `VOXBUDDY_TRANSLATION_PROVIDER=bedrock` (the
-default) enabled.
+the deployed IAM user *does* include the full Bedrock statement set
+below, alongside Polly, Transcribe, and DynamoDB (see `README.md` §6.5
+for the single authoritative copy with `Sid`s). Having this policy
+correct turned out to be necessary but not sufficient — per §0 above,
+the actual block on `VOXBUDDY_TRANSLATION_PROVIDER=bedrock` sits on
+AWS's Marketplace/billing side, not in IAM, which this policy alone
+doesn't fix.
 
 The default model, `global.anthropic.claude-sonnet-4-6`, is only
 invocable through a Bedrock **global cross-region inference profile**,
@@ -304,21 +348,65 @@ not a bare foundation-model id (the previous default,
 `anthropic.claude-3-5-haiku-20241022-v1:0`, was retired by AWS —
 Converse now returns `ResourceNotFoundException` for it). Unlike a
 foundation-model ARN, an inference-profile ARN **includes your AWS
-account id**:
+account id**, and because this model needs cross-region inference,
+`bedrock:InvokeModel` needs to be granted against *both* the
+inference-profile ARN and the foundation-model ARN (regional and
+global/unspecified), the latter two gated by a matching
+`bedrock:InferenceProfileArn` condition — a single statement against
+just one of these ARNs is not enough:
 
 ```json
 {
   "Version": "2012-10-17",
   "Statement": [
     {
+      "Sid": "VoxBuddyBedrockMarketplace",
+      "Effect": "Allow",
+      "Action": ["aws-marketplace:ViewSubscriptions", "aws-marketplace:Subscribe", "aws-marketplace:Unsubscribe"],
+      "Resource": "*"
+    },
+    {
+      "Sid": "VoxBuddyBedrockAvailability",
+      "Effect": "Allow",
+      "Action": "bedrock:GetFoundationModelAvailability",
+      "Resource": "*"
+    },
+    {
+      "Sid": "VoxBuddyBedrockRegionalProfile",
       "Effect": "Allow",
       "Action": "bedrock:InvokeModel",
-      "Resource": "arn:aws:bedrock:us-east-1:<YOUR_ACCOUNT_ID>:inference-profile/global.anthropic.claude-sonnet-4-6"
+      "Resource": "arn:aws:bedrock:us-east-1:<YOUR_ACCOUNT_ID>:inference-profile/global.anthropic.claude-sonnet-4-6",
+      "Condition": { "StringEquals": { "aws:RequestedRegion": "us-east-1" } }
     },
-    { "Effect": "Allow", "Action": ["polly:SynthesizeSpeech", "polly:DescribeVoices"], "Resource": "*" },
-    { "Effect": "Allow", "Action": ["transcribe:StartStreamTranscription", "transcribe:StartStreamTranscriptionWebSocket"], "Resource": "*" },
-    { "Effect": "Allow", "Action": ["dynamodb:ListTables"], "Resource": "*" },
     {
+      "Sid": "VoxBuddyBedrockRegionalModelAccess",
+      "Effect": "Allow",
+      "Action": "bedrock:InvokeModel",
+      "Resource": "arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-sonnet-4-6",
+      "Condition": {
+        "StringEquals": {
+          "aws:RequestedRegion": "us-east-1",
+          "bedrock:InferenceProfileArn": "arn:aws:bedrock:us-east-1:<YOUR_ACCOUNT_ID>:inference-profile/global.anthropic.claude-sonnet-4-6"
+        }
+      }
+    },
+    {
+      "Sid": "VoxBuddyBedrockGlobalModelAccess",
+      "Effect": "Allow",
+      "Action": "bedrock:InvokeModel",
+      "Resource": "arn:aws:bedrock:::foundation-model/anthropic.claude-sonnet-4-6",
+      "Condition": {
+        "StringEquals": {
+          "aws:RequestedRegion": "unspecified",
+          "bedrock:InferenceProfileArn": "arn:aws:bedrock:us-east-1:<YOUR_ACCOUNT_ID>:inference-profile/global.anthropic.claude-sonnet-4-6"
+        }
+      }
+    },
+    { "Sid": "VoxBuddyPolly", "Effect": "Allow", "Action": ["polly:SynthesizeSpeech", "polly:DescribeVoices"], "Resource": "*" },
+    { "Sid": "VoxBuddyTranscribe", "Effect": "Allow", "Action": ["transcribe:StartStreamTranscription", "transcribe:StartStreamTranscriptionWebSocket"], "Resource": "*" },
+    { "Sid": "VoxBuddyDynamoDBList", "Effect": "Allow", "Action": ["dynamodb:ListTables"], "Resource": "*" },
+    {
+      "Sid": "VoxBuddyDynamoDBTables",
       "Effect": "Allow",
       "Action": ["dynamodb:CreateTable", "dynamodb:DescribeTable", "dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:UpdateItem", "dynamodb:DeleteItem", "dynamodb:Query", "dynamodb:Scan"],
       "Resource": "arn:aws:dynamodb:us-east-1:<YOUR_ACCOUNT_ID>:table/voxbuddy_*"
@@ -327,12 +415,13 @@ account id**:
 }
 ```
 
-The `bedrock:InvokeModel` resource ARN must match `BEDROCK_MODEL_ID`
+The `bedrock:InvokeModel` resource ARNs must match `BEDROCK_MODEL_ID`
 exactly — changing `BEDROCK_MODEL_ID` or `AWS_REGION` means updating
-this ARN too. Note that a *global* inference profile still uses a real
-AWS region in its ARN (the region you call the Bedrock Runtime endpoint
-in, e.g. `us-east-1`) — "global" describes where the request may be
-routed for inference, not the ARN's region segment. Some model families
+all three Bedrock statements' ARNs, not just one. Note that a *global*
+inference profile still uses a real AWS region in its ARN (the region
+you call the Bedrock Runtime endpoint in, e.g. `us-east-1`) —
+"global" describes where the request may be routed for inference, not
+the ARN's region segment. Some model families
 use a bare foundation-model ARN (`.../foundation-model/<id>`, no account
 id) instead of an inference-profile ARN — check the specific model's
 page in the Bedrock console if `InvokeModel` returns a

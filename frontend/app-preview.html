@@ -171,20 +171,66 @@
     padding: 22px;
     position: relative;
     overflow: hidden;
+    /* .screen (the flex column this card lives in) will shrink a flex
+       item below its content height whenever that item's own overflow
+       isn't "visible" — the automatic min-height flexbox would normally
+       give it (based on its content) collapses to 0 instead. That let
+       the card get squeezed shorter than the label+title+waveform+button
+       actually need on shorter/narrower viewports, and since the card
+       also clips overflow, the CTA got cut off at the card's bottom
+       edge instead of the screen simply scrolling further. flex-shrink:0
+       keeps the card at its natural content height so .screen's own
+       overflow-y:auto handles any extra height by scrolling, not by
+       silently shrinking+clipping this card. */
+    flex-shrink: 0;
   }
   .hero-card .hero-label { font-size: 12px; color: var(--ink-muted); }
   .hero-card .hero-title { font-family: 'Fraunces', serif; font-size: 20px; margin-top: 6px; max-width: 220px; line-height: 1.25; }
+  /* Home hero waveform sizing lives here (previously an inline style on
+     the element) so narrow-width media queries below can adjust it. */
+  #home-waveform { height: 28px; margin: 10px 0 2px; justify-content: flex-start; }
   .start-btn {
-    margin-top: 18px; display: inline-flex; align-items: center; gap: 8px;
+    margin-top: 18px; max-width: 100%; display: inline-flex; align-items: center; gap: 8px;
     background: linear-gradient(135deg, var(--self), #f0c98a);
     color: #1a1206; font-weight: 700; font-size: 13.5px;
     padding: 12px 18px; border-radius: 14px; cursor: pointer; border: none;
     box-shadow: 0 6px 24px -6px rgba(232,169,76,0.55);
   }
+  .start-btn-label { white-space: nowrap; }
   .hero-orb-deco {
     position: absolute; right: -20px; top: -20px; width: 110px; height: 110px; border-radius: 50%;
     background: radial-gradient(circle at 35% 35%, var(--partner), transparent 70%);
     opacity: 0.5; filter: blur(2px);
+  }
+
+  /* Hero card responsive scaling — kicks in only once the .phone shell
+     itself goes edge-to-edge below 600px (see the existing max-width:600
+     rule). Above that the card keeps its current fixed-mockup appearance
+     unchanged, per spec. Tiers narrow the card's own padding/type scale
+     first, and only fall back to a compact/icon CTA once a full-width
+     button genuinely can't be kept comfortably inside the card. */
+  @media (max-width: 420px) {
+    .hero-card { padding: 18px; }
+    .hero-card .hero-title { font-size: 18px; max-width: 100%; }
+    #home-waveform { height: 24px; margin: 8px 0 2px; }
+    .start-btn { padding: 11px 16px; font-size: 13px; gap: 7px; }
+  }
+  @media (max-width: 360px) {
+    .hero-card { padding: 16px; }
+    .hero-card .hero-label { font-size: 11.5px; }
+    .hero-card .hero-title { font-size: 16.5px; }
+    #home-waveform { height: 20px; margin: 7px 0 2px; }
+    .start-btn { padding: 10px 14px; font-size: 12px; gap: 6px; margin-top: 14px; }
+  }
+  @media (max-width: 320px) {
+    /* Even the compact text button is tight at this width — collapse to
+       an icon-only round CTA rather than let it clip or overflow. */
+    .start-btn {
+      width: 44px; height: 44px; padding: 0; border-radius: 50%;
+      justify-content: center; gap: 0;
+    }
+    .start-btn-label { display: none; }
+    .start-btn svg.icon { width: 18px; height: 18px; }
   }
 
   .lang-row { display: flex; align-items: stretch; gap: 10px; margin-top: 18px; }
@@ -854,15 +900,30 @@
     font-size: 13px; text-align: center; padding: 13px; border-radius: 14px; cursor: pointer;
     border: 1px solid rgba(232,115,95,0.3); width: 100%;
   }
-  .help-item { padding: 14px 0; border-bottom: 1px solid var(--line); display: flex; gap: 12px; }
+  .help-item { padding: 14px 0; border-bottom: 1px solid var(--line); display: flex; gap: 12px; cursor: pointer; }
   .help-item .h-icon {
     width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0; margin-top: 1px;
     display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700;
     background: color-mix(in srgb, var(--self) 20%, transparent); color: var(--self);
     font-family: 'IBM Plex Mono', monospace;
   }
-  .help-item .h-q { font-size: 13.5px; font-weight: 700; }
-  .help-item .h-a { font-size: 12.5px; color: var(--ink-muted); margin-top: 5px; line-height: 1.5; }
+  /* FAQ grew from 3 always-expanded entries to 20 — collapsed-by-default
+     accordion rows keep the list scannable instead of a long wall of
+     text. Whole row is tappable, consistent with other clickable rows
+     in this app (.settings-row, etc). */
+  .help-item .h-body { flex: 1; min-width: 0; }
+  .help-item .h-q {
+    font-size: 13.5px; font-weight: 700;
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  }
+  .help-item .h-chevron { color: var(--ink-faint); flex-shrink: 0; transition: transform 0.2s ease, color 0.2s ease; }
+  .help-item.expanded .h-chevron { transform: rotate(90deg); color: var(--partner); }
+  .help-item .h-a {
+    font-size: 12.5px; color: var(--ink-muted); line-height: 1.5;
+    max-height: 0; opacity: 0; overflow: hidden; margin-top: 0;
+    transition: max-height 0.25s ease, opacity 0.2s ease, margin-top 0.2s ease;
+  }
+  .help-item.expanded .h-a { max-height: 260px; opacity: 1; margin-top: 5px; }
   .contact-link {
     display: flex; align-items: center; justify-content: center; gap: 8px;
     margin-top: 20px; padding: 13px; text-align: center; color: var(--ink);
@@ -1346,25 +1407,137 @@
           <div class="back-btn" onclick="goTo('screen-settings')" aria-label="Back to settings"><svg class="icon" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></div>
           <div><div class="detail-title">Help & feedback</div></div>
         </div>
-        <div class="help-item">
+        <div class="help-item" onclick="toggleFaqItem(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleFaqItem(this);}" tabindex="0" role="button" aria-expanded="false">
           <div class="h-icon">Q</div>
-          <div>
-            <div class="h-q">How does VoxBuddy know who I'm talking to?</div>
-            <div class="h-a">It listens for turn-taking patterns and voice consistency — no manual selection needed. See the Conversation screen while it's happening.</div>
+          <div class="h-body">
+            <div class="h-q"><span>How does VoxBuddy know who I'm talking to?</span><svg class="icon h-chevron" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="m9 18 6-6-6-6"/></svg></div>
+            <div class="h-a">VoxBuddy quietly combines a few signals — the sound of a voice, natural back-and-forth timing, and how well what's said fits the conversation so far — to work out who you're talking to. You don't select anyone manually; it updates automatically as the conversation happens.</div>
           </div>
         </div>
-        <div class="help-item">
+        <div class="help-item" onclick="toggleFaqItem(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleFaqItem(this);}" tabindex="0" role="button" aria-expanded="false">
           <div class="h-icon">Q</div>
-          <div>
-            <div class="h-q">Can I talk to more than one person at once?</div>
-            <div class="h-a">Yes — VoxBuddy can follow two people in the same conversation, like a couple at a market stall.</div>
+          <div class="h-body">
+            <div class="h-q"><span>Can I talk to more than one person at once?</span><svg class="icon h-chevron" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="m9 18 6-6-6-6"/></svg></div>
+            <div class="h-a">Yes — VoxBuddy can follow up to two conversation partners at the same time, so it works for situations like a couple at a market stall or two colleagues in a meeting. Anyone beyond that is treated as a bystander and filtered out.</div>
           </div>
         </div>
-        <div class="help-item">
+        <div class="help-item" onclick="toggleFaqItem(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleFaqItem(this);}" tabindex="0" role="button" aria-expanded="false">
           <div class="h-icon">Q</div>
-          <div>
-            <div class="h-q">Is my conversation history private?</div>
-            <div class="h-a">Yes, tied to your account only. See Privacy & data in Settings to clear it anytime.</div>
+          <div class="h-body">
+            <div class="h-q"><span>Is my conversation history private?</span><svg class="icon h-chevron" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="m9 18 6-6-6-6"/></svg></div>
+            <div class="h-a">Your conversation history is tied to your account and only visible when you're signed in — VoxBuddy doesn't sell it, share it, or use it for advertising. You can review or clear it anytime from Privacy & data in Settings.</div>
+          </div>
+        </div>
+        <div class="help-item" onclick="toggleFaqItem(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleFaqItem(this);}" tabindex="0" role="button" aria-expanded="false">
+          <div class="h-icon">Q</div>
+          <div class="h-body">
+            <div class="h-q"><span>How does real-time translation work?</span><svg class="icon h-chevron" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="m9 18 6-6-6-6"/></svg></div>
+            <div class="h-a">When you speak, VoxBuddy turns your speech into text, uses its Conversation Intelligence Engine to confirm who's talking, translates that text, and speaks the translation out loud. This happens continuously as the conversation goes on.</div>
+          </div>
+        </div>
+        <div class="help-item" onclick="toggleFaqItem(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleFaqItem(this);}" tabindex="0" role="button" aria-expanded="false">
+          <div class="h-icon">Q</div>
+          <div class="h-body">
+            <div class="h-q"><span>Which languages does VoxBuddy support?</span><svg class="icon h-chevron" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="m9 18 6-6-6-6"/></svg></div>
+            <div class="h-a">Supported languages depend on the speech recognition, translation, and voice providers configured for your VoxBuddy deployment, so the exact list can vary. You pick your own spoken language during setup, and VoxBuddy auto-detects the other person's language as they talk.</div>
+          </div>
+        </div>
+        <div class="help-item" onclick="toggleFaqItem(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleFaqItem(this);}" tabindex="0" role="button" aria-expanded="false">
+          <div class="h-icon">Q</div>
+          <div class="h-body">
+            <div class="h-q"><span>Do I need earbuds to use VoxBuddy?</span><svg class="icon h-chevron" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="m9 18 6-6-6-6"/></svg></div>
+            <div class="h-a">No — earbuds are optional. Setup lets you connect Bluetooth earbuds for a more private, hands-free experience, but you can skip that step and use your device's own microphone and speaker instead.</div>
+          </div>
+        </div>
+        <div class="help-item" onclick="toggleFaqItem(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleFaqItem(this);}" tabindex="0" role="button" aria-expanded="false">
+          <div class="h-icon">Q</div>
+          <div class="h-body">
+            <div class="h-q"><span>Does VoxBuddy store my voice or audio?</span><svg class="icon h-chevron" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="m9 18 6-6-6-6"/></svg></div>
+            <div class="h-a">Your saved conversation history contains the transcribed text and its translation, not raw audio recordings. Your voice is sent to the configured speech-recognition and speech-synthesis services to produce that text and spoken output, but audio itself isn't kept as part of your account's history.</div>
+          </div>
+        </div>
+        <div class="help-item" onclick="toggleFaqItem(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleFaqItem(this);}" tabindex="0" role="button" aria-expanded="false">
+          <div class="h-icon">Q</div>
+          <div class="h-body">
+            <div class="h-q"><span>Can I delete my conversation history?</span><svg class="icon h-chevron" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="m9 18 6-6-6-6"/></svg></div>
+            <div class="h-a">Yes. Go to Settings > Privacy & data and tap "Clear my conversation history" — this permanently deletes your saved conversations and resets your stats. Your account itself isn't affected, so you can keep using VoxBuddy right after.</div>
+          </div>
+        </div>
+        <div class="help-item" onclick="toggleFaqItem(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleFaqItem(this);}" tabindex="0" role="button" aria-expanded="false">
+          <div class="h-icon">Q</div>
+          <div class="h-body">
+            <div class="h-q"><span>Can I delete my VoxBuddy account?</span><svg class="icon h-chevron" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="m9 18 6-6-6-6"/></svg></div>
+            <div class="h-a">Yes. Go to Profile and tap Delete account, then confirm — VoxBuddy permanently removes your profile and every saved conversation, and signs you out everywhere. This can't be undone; signing back in afterward starts a brand-new account from scratch.</div>
+          </div>
+        </div>
+        <div class="help-item" onclick="toggleFaqItem(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleFaqItem(this);}" tabindex="0" role="button" aria-expanded="false">
+          <div class="h-icon">Q</div>
+          <div class="h-body">
+            <div class="h-q"><span>What happens if a translation is incorrect?</span><svg class="icon h-chevron" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="m9 18 6-6-6-6"/></svg></div>
+            <div class="h-a">VoxBuddy's translations are generated by AI and, like any automated translation, can occasionally get nuance, slang, or context wrong. For anything important — medical, legal, or financial details — it's worth double-checking or confirming directly with the other person.</div>
+          </div>
+        </div>
+        <div class="help-item" onclick="toggleFaqItem(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleFaqItem(this);}" tabindex="0" role="button" aria-expanded="false">
+          <div class="h-icon">Q</div>
+          <div class="h-body">
+            <div class="h-q"><span>Does VoxBuddy work offline?</span><svg class="icon h-chevron" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="m9 18 6-6-6-6"/></svg></div>
+            <div class="h-a">Not for live conversations — real-time speech recognition, translation, and speech synthesis all need an internet connection. The app itself can still open offline thanks to basic app-shell caching, but you'll need a connection to start or continue an actual conversation.</div>
+          </div>
+        </div>
+        <div class="help-item" onclick="toggleFaqItem(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleFaqItem(this);}" tabindex="0" role="button" aria-expanded="false">
+          <div class="h-icon">Q</div>
+          <div class="h-body">
+            <div class="h-q"><span>What happens if my internet connection drops?</span><svg class="icon h-chevron" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="m9 18 6-6-6-6"/></svg></div>
+            <div class="h-a">VoxBuddy shows an offline notice and automatically attempts to reconnect your conversation once your connection returns. If it can't reconnect, you may need to tap End and then Start Conversation again to begin a fresh session.</div>
+          </div>
+        </div>
+        <div class="help-item" onclick="toggleFaqItem(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleFaqItem(this);}" tabindex="0" role="button" aria-expanded="false">
+          <div class="h-icon">Q</div>
+          <div class="h-body">
+            <div class="h-q"><span>Which AI/cloud services power VoxBuddy?</span><svg class="icon h-chevron" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="m9 18 6-6-6-6"/></svg></div>
+            <div class="h-a">VoxBuddy's live pipeline uses AWS Transcribe for speech recognition, Gemini for translation, and Amazon Polly to turn translations into speech. Conversation history is stored in Amazon DynamoDB where that's enabled for your deployment.</div>
+          </div>
+        </div>
+        <div class="help-item" onclick="toggleFaqItem(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleFaqItem(this);}" tabindex="0" role="button" aria-expanded="false">
+          <div class="h-icon">Q</div>
+          <div class="h-body">
+            <div class="h-q"><span>Is my conversation used to train AI models?</span><svg class="icon h-chevron" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="m9 18 6-6-6-6"/></svg></div>
+            <div class="h-a">VoxBuddy has no feature that collects your conversations to train its own models. Your speech and text are sent to the configured speech-recognition, translation, and voice providers only to produce your conversation in real time — see the Privacy Policy for exactly what those providers receive.</div>
+          </div>
+        </div>
+        <div class="help-item" onclick="toggleFaqItem(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleFaqItem(this);}" tabindex="0" role="button" aria-expanded="false">
+          <div class="h-icon">Q</div>
+          <div class="h-body">
+            <div class="h-q"><span>How does VoxBuddy protect my account?</span><svg class="icon h-chevron" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="m9 18 6-6-6-6"/></svg></div>
+            <div class="h-a">You sign in with a one-time code sent to your email or phone, or with Google Sign-In — VoxBuddy never asks for or stores a password. Login codes expire quickly and aren't kept in plain text, and your session uses a private access token that's checked on every request.</div>
+          </div>
+        </div>
+        <div class="help-item" onclick="toggleFaqItem(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleFaqItem(this);}" tabindex="0" role="button" aria-expanded="false">
+          <div class="h-icon">Q</div>
+          <div class="h-body">
+            <div class="h-q"><span>Can I use VoxBuddy for group conversations?</span><svg class="icon h-chevron" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="m9 18 6-6-6-6"/></svg></div>
+            <div class="h-a">VoxBuddy supports small group conversations, tracking up to two active conversation partners alongside you at once. It's built for everyday situations like a couple at a stall or two colleagues in a meeting, rather than large groups with many simultaneous speakers.</div>
+          </div>
+        </div>
+        <div class="help-item" onclick="toggleFaqItem(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleFaqItem(this);}" tabindex="0" role="button" aria-expanded="false">
+          <div class="h-icon">Q</div>
+          <div class="h-body">
+            <div class="h-q"><span>What is Demo Mode?</span><svg class="icon h-chevron" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="m9 18 6-6-6-6"/></svg></div>
+            <div class="h-a">Demo Mode is a pre-login walkthrough that shows how VoxBuddy's Conversation Intelligence Engine decides who's a conversation partner versus a bystander, using preset example scenarios. It doesn't use your microphone, an account, or any live translation service — real conversations happen through Start Conversation once you're signed in.</div>
+          </div>
+        </div>
+        <div class="help-item" onclick="toggleFaqItem(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleFaqItem(this);}" tabindex="0" role="button" aria-expanded="false">
+          <div class="h-icon">Q</div>
+          <div class="h-body">
+            <div class="h-q"><span>What should I do if VoxBuddy is not detecting speech?</span><svg class="icon h-chevron" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="m9 18 6-6-6-6"/></svg></div>
+            <div class="h-a">Check that VoxBuddy has microphone permission, that the right input device (your phone's mic or connected earbuds) is selected, and that you have a stable internet connection. Also confirm you're using a supported, up-to-date browser or device. If speech still isn't detected, tap End and Start Conversation again to begin a fresh session.</div>
+          </div>
+        </div>
+        <div class="help-item" onclick="toggleFaqItem(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleFaqItem(this);}" tabindex="0" role="button" aria-expanded="false">
+          <div class="h-icon">Q</div>
+          <div class="h-body">
+            <div class="h-q"><span>What should I do if I cannot hear the translated speech?</span><svg class="icon h-chevron" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="m9 18 6-6-6-6"/></svg></div>
+            <div class="h-a">Check your device volume and that the right output — earbuds or phone speaker — is selected, and make sure your browser has audio playback permission. A patchy connection or a temporarily unavailable voice provider can also cause silence. If it still doesn't work, tap End and Start Conversation again.</div>
           </div>
         </div>
         <a class="contact-link" href="mailto:adarsh.ks.tech@gmail.com">
@@ -1409,10 +1582,10 @@
           <div class="hero-orb-deco"></div>
           <div class="hero-label">Ready when you are</div>
           <div class="hero-title">Start a conversation in any language</div>
-          <div class="voice-waveform" id="home-waveform" style="height:28px;margin:10px 0 2px;justify-content:flex-start;"></div>
-          <button class="start-btn">
+          <div class="voice-waveform" id="home-waveform"></div>
+          <button class="start-btn" aria-label="Start Conversation">
             <svg class="icon" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="M12 19v3"/><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/></svg>
-            Start Conversation
+            <span class="start-btn-label">Start Conversation</span>
           </button>
         </div>
 
@@ -2343,6 +2516,15 @@
         toast.style.color = 'var(--danger)';
         toast.textContent = 'Could not save — check your connection.';
       }
+    }
+
+    // Help & feedback FAQ — simple per-row expand/collapse (not an
+    // exclusive accordion, multiple rows can stay open). Keeps the now
+    // much longer FAQ list scannable instead of always-expanded text.
+    function toggleFaqItem(item) {
+      const nowExpanded = !item.classList.contains('expanded');
+      item.classList.toggle('expanded', nowExpanded);
+      item.setAttribute('aria-expanded', String(nowExpanded));
     }
 
     async function clearMyHistory() {

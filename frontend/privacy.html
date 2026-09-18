@@ -20,41 +20,58 @@
 </head>
 <body>
   <h1>VoxBuddy Privacy Policy</h1>
-  <p class="updated">Last updated: September 2026 — Phase 1/2 build. This is written for the current, real state of the app, not aspirational future features.</p>
+  <p class="updated">Last updated: September 19, 2026. This is written for the current, real state of the app, not aspirational future features.</p>
 
   <h2>What we collect</h2>
   <ul>
-    <li><strong>Email or phone number</strong> — whichever you sign in with. Used only to send you a one-time login code and identify your account. We do not require both; either alone is enough to create an account.</li>
-    <li><strong>Conversation history</strong> — if you complete a conversation, the transcript (what was said, in which languages) is saved to your account so you can view it later in History.</li>
+    <li><strong>Account information</strong> — an email address or phone number if you sign in with a one-time code, or your name/email from Google if you use Google Sign-In. Either an email or a phone number alone is enough to create an account; we don't require both, and we don't use passwords.</li>
+    <li><strong>Microphone audio, while a conversation is active</strong> — VoxBuddy asks your browser or device for microphone permission and streams your audio in real time to convert it to text. We do not save or store the raw audio itself.</li>
+    <li><strong>Conversation history</strong> — if you complete a conversation, the transcript (the original text, its translation, and the languages used, per turn) is saved to your account so you can view it later in History.</li>
     <li><strong>Basic usage stats</strong> — conversation count, languages used, and time talked, computed from your saved conversation history.</li>
   </ul>
 
   <h2>What we do not collect</h2>
   <ul>
+    <li>We do not store raw audio recordings of your voice — audio is streamed for live transcription and discarded once converted to text.</li>
     <li>We do not store your login code (OTP) in plain text — it's hashed, and discarded after use or expiry.</li>
     <li>We do not sell, share, or use your data for advertising. There are no ads in VoxBuddy.</li>
     <li>We do not require a password, and we don't store one.</li>
   </ul>
 
-  <h2>How long we keep it</h2>
-  <p>Your account and conversation history are kept until you delete them. You can clear your entire conversation history at any time from Settings, or by contacting us directly. Login codes expire after 5 minutes whether used or not.</p>
+  <h2>How your speech is processed</h2>
+  <p>When you speak, VoxBuddy streams your microphone audio to <strong>AWS Transcribe</strong> (Amazon's speech-to-text service) to convert it into text in real time. That text is then sent to <strong>Google's Gemini API</strong> to be translated into the other language in your conversation, using recent conversation context to keep translations coherent. The translated text is sent to <strong>AWS Polly</strong> (Amazon's text-to-speech service) to generate the spoken audio you and the other person hear. Each of these steps receives only the text or audio needed to do its job, not your account identity.</p>
 
-  <h2>Who can see your data</h2>
-  <p>Your conversation history is private to your account — other users cannot see it. If you use VoxBuddy without signing in (the anonymous testing mode), conversations aren't tied to any account and are visible to anyone with backend access, which is why we recommend signing in for real use.</p>
+  <h2>Where your history is stored</h2>
+  <p>Completed conversation transcripts and related stats are stored in <strong>Amazon DynamoDB</strong>, hosted in AWS's us-east-1 region, so they're available to you in History across sessions and devices. If you use VoxBuddy without signing in (anonymous testing mode), conversations aren't tied to any account and aren't private to a specific person.</p>
+
+  <h2>Microphone and device permissions</h2>
+  <p>VoxBuddy requests microphone access from your browser or device only to capture your speech during a conversation. You can deny or revoke this permission at any time in your browser or device settings, though the app can't function without it while a conversation is active.</p>
+
+  <h2>How long we keep it</h2>
+  <p>Your account and conversation history are kept until you delete them. You can clear your entire conversation history at any time from Settings. Login codes expire after 5 minutes whether used or not.</p>
 
   <h2>Third parties</h2>
-  <p>When configured with real providers (not the default local/test setup), VoxBuddy uses:</p>
+  <p>VoxBuddy relies on the following third-party services to work:</p>
   <ul>
-    <li><strong>Brevo</strong> — to deliver login codes by email or SMS. Brevo receives your email/phone number and the code, nothing else.</li>
-    <li><strong>Anthropic (Claude) or Google (Gemini)</strong> — to translate conversation text, when configured (one or the other, not both). The provider receives the text being translated and recent conversation context, not your account identity.</li>
-    <li><strong>AssemblyAI</strong> — to transcribe your microphone audio into text, when configured.</li>
-    <li><strong>ElevenLabs</strong> — to generate spoken audio of the translated text, when configured.</li>
+    <li><strong>AWS Transcribe</strong> — converts your streamed microphone audio into text in real time.</li>
+    <li><strong>Google Gemini</strong> — translates conversation text between languages.</li>
+    <li><strong>AWS Polly</strong> — converts translated text back into spoken audio.</li>
+    <li><strong>Amazon DynamoDB</strong> — stores your conversation history and usage stats.</li>
+    <li><strong>Brevo</strong> and/or <strong>Fast2SMS</strong> — deliver one-time login codes by email or SMS, receiving your email/phone number and the code, nothing else. (If you sign in with Google instead, no login code is sent.)</li>
+    <li><strong>Google Sign-In</strong> — if you choose to sign in with Google, Google verifies your identity and shares your name and email with VoxBuddy.</li>
   </ul>
 
-  <h2>Your rights</h2>
-  <p>You can delete your conversation history at any time. To delete your account entirely, contact us using the details below.</p>
+  <h2>Security</h2>
+  <p>Login codes are hashed before storage and expire after 5 minutes. Google Sign-In tokens are verified directly against Google's public keys. We don't claim end-to-end encryption or guarantee zero data retention — this section describes the safeguards actually in place, not aspirational ones.</p>
+
+  <h2>Your rights and controls</h2>
+  <ul>
+    <li><strong>Clear your history</strong> — delete all saved conversations at any time from Settings.</li>
+    <li><strong>Delete your account</strong> — permanently removes your account and all associated conversation history. Available from within the app, or by contacting us below.</li>
+    <li><strong>Revoke microphone access</strong> — via your browser or device settings at any time.</li>
+  </ul>
 
   <h2>Contact</h2>
-  <p>[Add your contact email here before publishing — required by Play Store]</p>
+  <p>Questions about this policy or your data? Email us at <a href="mailto:adarsh.ks.tech@gmail.com">adarsh.ks.tech@gmail.com</a>.</p>
 </body>
 </html>
