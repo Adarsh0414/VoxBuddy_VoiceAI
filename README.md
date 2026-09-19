@@ -697,8 +697,8 @@ A few things a judge or a future contributor would reasonably ask about, flagged
 
 | Name | Role | GitHub | LinkedIn |
 |---|---|---|---|
-| Adarsh Kumar Singh | Frontend, Mobile & Application | [@Adarsh0414](https://github.com/Adarsh0414) | [@Adarsh_Singh](https://www.linkedin.com/in/adarsh-ks-tech14/) |
-| Janvi Jaiswal | AI & Backend Systems | [@Janvi99852003](https://github.com/Janvi99852003) | [@Janvi_Jaiswal](https://www.linkedin.com/in/janvi-jaiswal-72415b307/) |
+| Adarsh Kumar Singh | AI & Backend Systems | [@Adarsh0414](https://github.com/Adarsh0414) | [@Adarsh_Singh](https://www.linkedin.com/in/adarsh-ks-tech14/) |
+| Janvi Jaiswal | Frontend, Mobile & Application | [@Janvi99852003](https://github.com/Janvi99852003) | [@Janvi_Jaiswal](https://www.linkedin.com/in/janvi-jaiswal-72415b307/) |
 
 **Affiliation:** B.Tech CSE, VIT Bhopal
 **Repo:** [github.com/Adarsh0414/VoxBuddy](https://github.com/Adarsh0414/VoxBuddy)
