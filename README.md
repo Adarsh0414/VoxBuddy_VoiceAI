@@ -21,9 +21,8 @@ VoxBuddy listens through your Bluetooth earbuds, figures out who you're actually
 | Resource | Link |
 |---|---|
 | 🎥 Demo video | `[ADD LINK]` |
-| 🌐 Live app (PWA) | `[ADD LINK]` |
-| 📱 Android APK | `[ADD LINK]` |
-| 🖥️ Backend API (deployed) | `[ADD LINK]` |
+| 📱 Android APK | `https://github.com/Adarsh0414/VoxBuddy_VoiceAI/releases/download/v1.0.0/VoxBuddy_VoiceAi.apk` |
+| 🖥️ Backend API (deployed) | `http://voxbuddy-env.eba-ixnm7pmc.us-east-1.elasticbeanstalk.com/?utm_source=chatgpt.com` |
 
 ---
 
@@ -561,12 +560,12 @@ Then open `http://<your-pc-local-ip>:8000/app` from your phone on the same netwo
 
 | Name | Role | GitHub | LinkedIn |
 |---|---|---|---|
-| Adarsh Kumar Singh | `[ADD ROLE]` | [@Adarsh0414](https://github.com/Adarsh0414) | `[ADD LINK]` |
-| `[ADD NAME]` | `[ADD ROLE]` | `[ADD LINK]` | `[ADD LINK]` |
+| Adarsh Kumar Singh | Frontend, Mobile & Application | [@Adarsh0414](https://github.com/Adarsh0414) | [@Adarsh_Singh](https://www.linkedin.com/in/adarsh-ks-tech14/) |
+| Janvi Jaiswal | AI & Backend Systems | [@Janvi99852003](https://github.com/Janvi99852003) | [@Janvi_Jaiswal](https://www.linkedin.com/in/janvi-jaiswal-72415b307/) |
 
 **Affiliation:** B.Tech CSE, VIT Bhopal
 **Repo:** [github.com/Adarsh0414/VoxBuddy](https://github.com/Adarsh0414/VoxBuddy)
-**Contact:** `[ADD EMAIL / CONTACT LINK]`
+**Contact:** adarsh.ks.tech@gmail.com
 
 ---
 
