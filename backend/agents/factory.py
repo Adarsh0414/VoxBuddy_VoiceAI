@@ -99,11 +99,12 @@ def get_streaming_asr_agent(language_code: str | None = None) -> StreamingASRAge
         live-tested against real AssemblyAI traffic yet.
       - "aws_transcribe" — AmazonTranscribeStreamingASRAgent, the AWS-native
         alternative (see agents/asr_transcribe.py's module docstring for
-        how it compares to the AssemblyAI adapter). Requires AWS
-        credentials resolvable the usual way (environment,
-        ~/.aws/credentials, an instance/task role — same as
-        agents/tts_polly.py); AWS_REGION optional, defaults to us-east-1.
-        Also scaffolded but not live-tested.
+        how it compares to the AssemblyAI adapter). Credentials are
+        resolved via boto3's normal provider chain — environment
+        variables, ~/.aws/credentials, or an EC2/Elastic Beanstalk
+        instance profile — same as agents/tts_polly.py; AWS_REGION
+        optional, defaults to us-east-1. Also scaffolded but not
+        live-tested.
 
     Added alongside the new /ws/{session_id}/audio endpoint in app.py,
     which is the first caller that pushes real audio bytes through this
@@ -139,12 +140,11 @@ def get_streaming_asr_agent(language_code: str | None = None) -> StreamingASRAge
 
     if provider == "aws_transcribe":
         from .asr_transcribe import AmazonTranscribeStreamingASRAgent
-        if not os.environ.get("AWS_ACCESS_KEY_ID") or not os.environ.get("AWS_SECRET_ACCESS_KEY"):
-            raise RuntimeError(
-                "VOXBUDDY_ASR_PROVIDER=aws_transcribe requires "
-                "AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY to be set "
-                "(AWS_REGION optional, defaults to us-east-1)."
-            )
+        # No explicit static-credential check: boto3's normal provider
+        # chain resolves credentials on its own (env vars,
+        # ~/.aws/credentials, or an EC2/Elastic Beanstalk instance
+        # profile). If nothing is resolvable, boto3 raises
+        # NoCredentialsError on the first real Transcribe call.
         return AmazonTranscribeStreamingASRAgent(
             region=os.environ.get("AWS_REGION"),
             language_code=language_code or "en-US",
@@ -168,11 +168,12 @@ def get_tts_agent() -> tuple[TTSAgent, str]:
       - "elevenlabs" — ElevenLabsTTSAgent, requires ELEVENLABS_API_KEY.
         Produces real mp3 bytes. Format returned: "mp3".
       - "polly" — PollyTTSAgent (Amazon Polly, see agents/tts_polly.py),
-        the AWS-native TTS option. Requires AWS_ACCESS_KEY_ID /
-        AWS_SECRET_ACCESS_KEY (and optionally AWS_REGION) to be set —
-        boto3 reads these directly from the environment, so no separate
-        VoxBuddy-specific key is needed here. Produces real mp3 bytes.
-        Format returned: "mp3".
+        the AWS-native TTS option. Credentials are resolved via boto3's
+        normal provider chain — environment variables,
+        ~/.aws/credentials, or an EC2/Elastic Beanstalk instance profile
+        — so no separate VoxBuddy-specific key is needed here.
+        AWS_REGION optional. Produces real mp3 bytes. Format returned:
+        "mp3".
     """
     provider = os.environ.get("VOXBUDDY_TTS_PROVIDER", "mock").lower()
 
@@ -192,12 +193,11 @@ def get_tts_agent() -> tuple[TTSAgent, str]:
 
     if provider == "polly":
         from .tts_polly import PollyTTSAgent
-        if not os.environ.get("AWS_ACCESS_KEY_ID") or not os.environ.get("AWS_SECRET_ACCESS_KEY"):
-            raise RuntimeError(
-                "VOXBUDDY_TTS_PROVIDER=polly requires AWS_ACCESS_KEY_ID and "
-                "AWS_SECRET_ACCESS_KEY to be set (AWS_REGION optional, "
-                "defaults to us-east-1)."
-            )
+        # No explicit static-credential check: boto3's normal provider
+        # chain resolves credentials on its own (env vars,
+        # ~/.aws/credentials, or an EC2/Elastic Beanstalk instance
+        # profile). If nothing is resolvable, boto3 raises
+        # NoCredentialsError on the first real Polly call.
         return PollyTTSAgent(region_name=os.environ.get("AWS_REGION")), "mp3"
 
     raise ValueError(

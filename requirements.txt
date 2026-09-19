@@ -1,0 +1,5 @@
+# Elastic Beanstalk's Python platform installs whatever is listed here at
+# deploy time. The real dependency list lives in backend/requirements.txt
+# (used for local dev too) — this just points EB at it so there's one
+# source of truth instead of two lists to keep in sync.
+-r backend/requirements.txt

@@ -36,12 +36,18 @@ def test_assemblyai_provider_selected_when_configured(monkeypatch):
     assert agent.api_key == "fake-key"
 
 
-def test_aws_transcribe_provider_requires_credentials(monkeypatch):
+def test_aws_transcribe_provider_works_without_static_credentials(monkeypatch):
+    """No static AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY required — on
+    Elastic Beanstalk (or any EC2 instance) boto3 resolves credentials
+    from the attached IAM instance profile instead. The factory should
+    construct the agent either way and let boto3's own credential chain
+    handle resolution at call time."""
     monkeypatch.setenv("VOXBUDDY_ASR_PROVIDER", "aws_transcribe")
     monkeypatch.delenv("AWS_ACCESS_KEY_ID", raising=False)
     monkeypatch.delenv("AWS_SECRET_ACCESS_KEY", raising=False)
-    with pytest.raises(RuntimeError, match="AWS_ACCESS_KEY_ID"):
-        get_streaming_asr_agent()
+    from agents.asr_transcribe import AmazonTranscribeStreamingASRAgent
+    agent = get_streaming_asr_agent()
+    assert isinstance(agent, AmazonTranscribeStreamingASRAgent)
 
 
 def test_aws_transcribe_provider_selected_when_configured(monkeypatch):

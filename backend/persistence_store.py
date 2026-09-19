@@ -10,8 +10,10 @@ for ASR/translation/TTS.
   - "sqlite" (default) - persistence.py. Zero-config, runs locally with no
     AWS account needed, exactly as this project has always worked.
   - "dynamodb" - persistence_dynamodb.py, the AWS-native backend (see its
-    module docstring). Requires AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY
-    to be set; AWS_REGION optional (boto3 default region otherwise).
+    module docstring). Credentials are resolved via boto3's normal
+    provider chain (env vars, ~/.aws/credentials, or an EC2/Elastic
+    Beanstalk instance profile / IAM role); AWS_REGION optional (boto3
+    default region otherwise).
 
 Implementation note: this module replaces its own entry in sys.modules
 with the chosen backend module, rather than re-exporting individual
@@ -36,11 +38,12 @@ _PROVIDER = os.environ.get("VOXBUDDY_PERSISTENCE_PROVIDER", "sqlite").lower()
 if _PROVIDER == "sqlite":
     import persistence as _backend
 elif _PROVIDER == "dynamodb":
-    if not os.environ.get("AWS_ACCESS_KEY_ID") or not os.environ.get("AWS_SECRET_ACCESS_KEY"):
-        raise RuntimeError(
-            "VOXBUDDY_PERSISTENCE_PROVIDER=dynamodb requires AWS_ACCESS_KEY_ID "
-            "and AWS_SECRET_ACCESS_KEY to be set (AWS_REGION optional)."
-        )
+    # No explicit static-credential check here: boto3's normal provider
+    # chain resolves credentials on its own (env vars, ~/.aws/credentials,
+    # or — as on an Elastic Beanstalk EC2 instance — an attached IAM
+    # instance profile). If no credentials are resolvable at all, boto3
+    # raises NoCredentialsError the first time a real DynamoDB call is
+    # made, which surfaces just as clearly as this upfront check did.
     import persistence_dynamodb as _backend
 else:
     raise ValueError(
