@@ -22,10 +22,8 @@ VoxBuddy listens through your Bluetooth earbuds, figures out who you're actually
 |---|---|
 | 🎥 Demo video | `[ADD LINK]` |
 | 🌐 Live app (PWA) | `[ADD LINK]` |
-| 📱 Android APK / Play Store | `[ADD LINK]` |
+| 📱 Android APK | `[ADD LINK]` |
 | 🖥️ Backend API (deployed) | `[ADD LINK]` |
-| 📊 Pitch deck / slides | `[ADD LINK]` |
-| 📝 Devpost / hackathon submission | `[ADD LINK]` |
 
 ---
 
