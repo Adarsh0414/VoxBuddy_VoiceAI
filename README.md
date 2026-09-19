@@ -727,8 +727,8 @@ Disclosed per the hackathon's rules on AI tool use.
 | Deployed backend (AWS Elastic Beanstalk) | [voxbuddy-env.eba-ixnm7pmc.us-east-1.elasticbeanstalk.com](http://voxbuddy-env.eba-ixnm7pmc.us-east-1.elasticbeanstalk.com) |
 | Android APK | [VoxBuddy_VoiceAi v1.0.0](https://github.com/Adarsh0414/VoxBuddy_VoiceAI/releases/download/v1.0.0/VoxBuddy_VoiceAi.apk) |
 | WeMakeDevs × AWS First Commit | [wemakedevs.org/aws/first-commit](https://www.wemakedevs.org/aws/first-commit) |
-| Amazon Polly docs | [docs.aws.amazon.com/polly](https://docs.aws.amazon.com/polly/) |
-| Amazon DynamoDB docs | [docs.aws.amazon.com/dynamodb](https://docs.aws.amazon.com/dynamodb/) |
-| Amazon Transcribe docs | [docs.aws.amazon.com/transcribe](https://docs.aws.amazon.com/transcribe/) |
-| Amazon Bedrock docs | [docs.aws.amazon.com/bedrock](https://docs.aws.amazon.com/bedrock/) |
-| AWS Elastic Beanstalk docs | [docs.aws.amazon.com/elasticbeanstalk](https://docs.aws.amazon.com/elasticbeanstalk/) |
+| Amazon Polly docs | [docs.aws.amazon.com/polly/latest/dg](https://docs.aws.amazon.com/polly/latest/dg/what-is.html) |
+| Amazon DynamoDB docs | [docs.aws.amazon.com/dynamodb](https://docs.aws.amazon.com/dynamodb) |
+| Amazon Transcribe docs | [docs.aws.amazon.com/transcribe](https://docs.aws.amazon.com/transcribe) |
+| Amazon Bedrock docs | [docs.aws.amazon.com/bedrock/latest/userguide](https://docs.aws.amazon.com/bedrock/latest/userguide/what-is-bedrock.html) |
+| AWS Elastic Beanstalk docs | [docs.aws.amazon.com/elasticbeanstalk/latest/dg](https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/Welcome.html) |
