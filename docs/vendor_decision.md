@@ -1,6 +1,39 @@
 # VoxBuddy — Phase 2 Vendor Research & Decision (ASR / Translation / TTS / Diarization)
 *Research date: September 2026. Prices and latency figures are vendor-published or third-party benchmark figures as of mid-2026 and should be re-verified at contract time — this market moves fast.*
 
+## Current Hackathon Architecture
+
+This document is primarily a **historical vendor research/decision log**
+from earlier in the project (see sections 1–5 below). The pipeline it
+evaluates and the pipeline actually deployed for the hackathon have since
+diverged in places. What the **current hackathon deployment** actually
+runs:
+
+- **ASR:** AWS Transcribe (`VOXBUDDY_ASR_PROVIDER=aws_transcribe`)
+- **Conversation Intelligence Engine (CIE):** original logic, unchanged since this doc was written
+- **Translation:** Google Gemini (`VOXBUDDY_TRANSLATION_PROVIDER=gemini`)
+- **TTS:** Amazon Polly
+- **Persistence:** Amazon DynamoDB
+- **Deployment platform:** AWS Elastic Beanstalk / EC2
+- **IAM:** a scoped policy covering Polly, Transcribe, and DynamoDB (see `README.md` §6.5)
+
+See `README.md` §6 and §19, and `docs/AWS_INTEGRATION.md` /
+`docs/AWS_DEPLOYMENT.md`, for the full, current write-up of this pipeline.
+
+## Alternative / Historical Providers
+
+The vendors and platforms researched or previously used below —
+**AssemblyAI**, **ElevenLabs**, **Anthropic** (direct API), **Amazon
+Bedrock** (translation), and **Render** (deployment) — are retained in
+the codebase as alternative/optional providers or documented here as
+historical development choices; they are not part of the current
+hackathon deployment listed above. Bedrock specifically is fully
+implemented and was the code's intended default, but is currently
+blocked at the AWS account level rather than by choice — see `README.md`
+§6.7 for the full story.
+
+---
+
 ## 0. The decision that shapes everything else: cascaded vs. end-to-end
 
 2026's speech-translation market splits into two architectures:
@@ -44,7 +77,7 @@ Two real paths:
 
 I've implemented a working adapter against this recommendation — see `backend/agents/translation_anthropic.py`.
 
-**Update:** Amazon Bedrock (`backend/agents/translation_bedrock.py`) is now the *default* translation provider (`VOXBUDDY_TRANSLATION_PROVIDER=bedrock`), using Bedrock's Converse API against the same LLM-based, context-injection design recommended above — the recommendation itself hasn't changed, just which vendor runs it by default, since Bedrock reuses the AWS credentials this app's other AWS-native stages (Polly, Transcribe, DynamoDB) already require, with no separate account/billing relationship. Gemini (`agents/translation_gemini.py`) remains available as an optional, secondary provider for anyone who'd rather translate through their own Gemini API key.
+**Update:** Amazon Bedrock (`backend/agents/translation_bedrock.py`) is the *code's default* translation provider (`VOXBUDDY_TRANSLATION_PROVIDER=bedrock`), using Bedrock's Converse API against the same LLM-based, context-injection design recommended above — the recommendation itself hasn't changed, just which vendor runs it by default, since Bedrock reuses the AWS credentials this app's other AWS-native stages (Polly, Transcribe, DynamoDB) already require, with no separate account/billing relationship. **However, the currently deployed hackathon build overrides this default and runs on Gemini** (`agents/translation_gemini.py`, `VOXBUDDY_TRANSLATION_PROVIDER=gemini`) instead, because Bedrock model access is currently blocked at the AWS account level — see `README.md` §6.7 for the full story. Flipping back to `bedrock` once that's resolved needs no code change.
 
 ---
 
@@ -64,20 +97,24 @@ Need: streaming (audio must start playing before the full sentence is synthesize
 
 ## 4. What's implemented vs. what's still a decision doc
 
-*Real Anthropic and Gemini adapters exist alongside the now-default Bedrock one — `agents/translation_anthropic.py` / `agents/translation_gemini.py` — same context-injection design, picked via `VOXBUDDY_TRANSLATION_PROVIDER=anthropic` / `=gemini`.*
+*Real Anthropic and Gemini adapters exist alongside the code-default Bedrock one — `agents/translation_anthropic.py` / `agents/translation_gemini.py` — same context-injection design, picked via `VOXBUDDY_TRANSLATION_PROVIDER=anthropic` / `=gemini`.*
+
+**Note:** the "Status" column below describes each adapter's own implementation state at the time it was written (real vendor integration vs. mock), not which one the current hackathon deployment actually runs — see "Current Hackathon Architecture" at the top of this document for that.
 
 | Agent | Status |
 |---|---|
-| Translation (Amazon Bedrock — default; Anthropic Claude or Google Gemini — optional, context-aware) | **Implemented, real, and (Bedrock/Anthropic) live-tested** — `agents/translation_bedrock.py` (default) / `agents/translation_anthropic.py` / `agents/translation_gemini.py`. Selected via `VOXBUDDY_TRANSLATION_PROVIDER`, defaulting to `bedrock`. |
-| ASR + diarization (AssemblyAI) | **Implemented against the real v3 streaming SDK.** The async/streaming interface gap noted below is closed — `StreamingASRAgent` in `agents/base.py`, bridged into the pipeline by `session/streaming_manager.py`. First live-device test surfaced a real integration bug: the adapter called the SDK's blocking `client.stream()` once per audio frame instead of once with a generator for the whole session (the SDK's actual documented contract), so no final transcript was ever produced. Fixed with a queue + generator + background-thread pattern that preserves the non-blocking `send_audio()` shape the rest of the pipeline depends on — see `agents/asr_assemblyai.py`. Needs `ASSEMBLYAI_API_KEY` set (locally in `.env`, and separately in Render's dashboard for the deployed backend, since Render doesn't inherit local `.env` values). |
-| TTS (ElevenLabs) | **Implemented against the real API**, with real (non-placeholder) default voice IDs now set in `agents/tts_elevenlabs.py` — though currently the same voice ID is reused for every target language, so distinct per-language voices are still a to-do. Needs `ELEVENLABS_API_KEY` set the same way as AssemblyAI above (local `.env` + Render dashboard separately). |
-| Speaker embeddings | **Still mocked.** Recommendation unchanged: derive an initial speaker identity directly from AssemblyAI's inline diarization labels (cheap, already-paid-for) rather than standing up a separate embedding model in v1; revisit a dedicated x-vector/d-vector model only if diarization-label stability across turns proves insufficient for the CIE's cross-turn `Speaker` tracking |
+| Translation (Amazon Bedrock — code default; Anthropic Claude or Google Gemini — alternative, context-aware) | **Implemented, real, and (Bedrock/Anthropic) live-tested** — `agents/translation_bedrock.py` (code default) / `agents/translation_anthropic.py` / `agents/translation_gemini.py`. Selected via `VOXBUDDY_TRANSLATION_PROVIDER`; the deployed hackathon build sets this explicitly to `gemini` (Bedrock is blocked at the AWS account level — README.md §6.7). |
+| ASR + diarization (AssemblyAI — historical/alternative; current deployment uses AWS Transcribe) | **Implemented against the real v3 streaming SDK.** The async/streaming interface gap noted below is closed — `StreamingASRAgent` in `agents/base.py`, bridged into the pipeline by `session/streaming_manager.py`. First live-device test surfaced a real integration bug: the adapter called the SDK's blocking `client.stream()` once per audio frame instead of once with a generator for the whole session (the SDK's actual documented contract), so no final transcript was ever produced. Fixed with a queue + generator + background-thread pattern that preserves the non-blocking `send_audio()` shape the rest of the pipeline depends on — see `agents/asr_assemblyai.py`. Needs `ASSEMBLYAI_API_KEY` set (locally in `.env`, and separately in Render's dashboard if deploying there, since Render doesn't inherit local `.env` values). |
+| TTS (ElevenLabs — historical/alternative; current deployment uses Amazon Polly) | **Implemented against the real API**, with real (non-placeholder) default voice IDs now set in `agents/tts_elevenlabs.py` — though currently the same voice ID is reused for every target language, so distinct per-language voices are still a to-do. Needs `ELEVENLABS_API_KEY` set the same way as AssemblyAI above (local `.env` + Render dashboard separately, if deploying there). |
+| Speaker embeddings | **Still mocked.** Recommendation unchanged: derive an initial speaker identity directly from inline diarization labels (cheap, already-paid-for) rather than standing up a separate embedding model in v1; revisit a dedicated x-vector/d-vector model only if diarization-label stability across turns proves insufficient for the CIE's cross-turn `Speaker` tracking |
 
-**Deployment note learned the hard way:** `render.yaml` marks every vendor API key as
+**Deployment note learned the hard way (historical, applies if deploying to Render):** `render.yaml` marks every vendor API key as
 `sync: false`, meaning Render never auto-populates them from this repo or from a local
 `.env` — they have to be pasted into the Render dashboard manually, separately from local
 dev setup. A backend that works perfectly locally but stays silent (or mock-only) once
-deployed is the signature symptom of this step being skipped.
+deployed is the signature symptom of this step being skipped. The current hackathon
+deployment runs on AWS Elastic Beanstalk instead, where the equivalent step is setting
+environment properties on the EB environment — see `docs/AWS_DEPLOYMENT.md` §5.
 
 ## 5. Immediate next actions (need real accounts / credentials, can't be done further in this sandbox)
 

@@ -50,14 +50,20 @@ mobile/
 
 ## Point it at your real backend before building
 
-`mobile/capacitor.config.ts` already points at the deployed Render backend:
+`mobile/capacitor.config.ts` already points at the deployed backend. The
+current hackathon deployment is AWS Elastic Beanstalk:
 
 ```ts
 server: {
-  url: 'https://voxbuddy-backend.onrender.com/app',
-  cleartext: false,
+  url: 'http://voxbuddy-env.eba-ixnm7pmc.us-east-1.elasticbeanstalk.com/app',
+  cleartext: true, // EB domain is plain HTTP for now, no cert attached yet
 }
 ```
+
+Render was used as an alternative deployment path during development (see
+`render.yaml`), and `mobile/capacitor.config.ts` can be pointed at a Render
+URL instead if you deploy there — just switch `cleartext` back to `false`
+once you're on a real HTTPS URL.
 
 VoxBuddy has nothing meaningful to show until this points at a live
 server — there's no offline-first bundle, the native shell is a thin

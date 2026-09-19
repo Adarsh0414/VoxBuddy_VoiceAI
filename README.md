@@ -270,7 +270,7 @@ This account also has a live, AWS-confirmed $100 hackathon credit (WeMakeDevs, c
 │   mic + TTS  │        translated audio           │        │                   │
 │   playback)  │                                   │        ▼                   │
 └─────────────┘                                   │  Streaming ASR Agent       │
-                                                    │  (AssemblyAI)              │
+                                                    │  (Transcribe, active)      │
                                                     │        │ final transcript  │
                                                     │        ▼                   │
                                                     │  Conversation              │
@@ -477,7 +477,6 @@ voxbuddy/
 │   ├── vendor_decision.md
 │   ├── MOBILE_BUILD.md
 │   ├── PLAY_STORE_PUBLISHING.md
-│   ├── SECURITY_PRIVACY_REVIEW.md
 │   └── TESTING_REAL_PIPELINE.md
 ├── .ebextensions/                 Elastic Beanstalk config (HTTPS security group, certbot install)
 ├── .platform/hooks/postdeploy/    EB deploy hook — provisions Let's Encrypt TLS on the instance
@@ -619,7 +618,7 @@ The FastAPI process itself runs the full pipeline in-process: WebSocket audio in
 - **Authentication.** Passwordless OTP (email/phone) with hashed, single-use, rate-limited, auto-expiring codes, using constant-time comparison (`hmac.compare_digest`) to avoid timing attacks; Google Sign-In is verified server-side against Google's own public keys rather than trusted client-side. A per-IP rate limit (8 requests / 10 minutes) additionally caps OTP-request spam across different identifiers.
 - **AWS IAM least privilege.** The deployed IAM policy (6.5) grants only the specific actions each integration calls — scoped DynamoDB actions limited to `voxbuddy_*`-prefixed table ARNs, no `dynamodb:*` wildcard, and no `s3:*` or `cloudwatch:PutMetricData` grants unless those optional features are explicitly turned on.
 - **Same-origin by default.** No `CORSMiddleware` is configured, since the frontend and backend are served from the same origin — this means the browser's default same-origin policy applies, and a page on another domain cannot make authenticated requests against the API.
-- **Known, documented tradeoff — auth tokens in `localStorage`.** Session tokens are stored in browser `localStorage` rather than an httpOnly cookie, which means a successful XSS could read a token directly. This is a deliberate, documented decision (not an oversight) because the app runs both in a normal browser tab and inside a Capacitor native WebView pointed at a remote origin, and cookie-based auth across both needs its own dedicated pass. See `docs/SECURITY_PRIVACY_REVIEW.md` for the full reasoning.
+- **Known, documented tradeoff — auth tokens in `localStorage`.** Session tokens are stored in browser `localStorage` rather than an httpOnly cookie, which means a successful XSS could read a token directly. This is a deliberate, documented decision (not an oversight) because the app runs both in a normal browser tab and inside a Capacitor native WebView pointed at a remote origin, and cookie-based auth across both needs its own dedicated pass. 
 - **`.gitignore` coverage.** `.env`, the local SQLite database file, build artifacts, and mobile signing files (`*.keystore`, `*.jks`) are all excluded from version control.
 - **This documentation does not publish** IAM secret access keys, AWS account IDs, OAuth client secrets, or any other production credential — every code sample uses placeholders (e.g. `<YOUR_ACCOUNT_ID>`, `your_key_here`).
 

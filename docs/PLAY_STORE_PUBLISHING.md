@@ -15,7 +15,12 @@ your app forever.
 ## Step 1 — Deploy to a real HTTPS URL
 
 TWA requires your app to be live on the public internet, not `localhost`.
-Render works and matches how CampusVibe/CallBeacon are already hosted:
+Current hackathon deployment: AWS Elastic Beanstalk (see `README.md` §19
+and `docs/AWS_DEPLOYMENT.md`) — if you're publishing from the existing
+deployment, you can skip straight to Step 2 using that URL. Render was
+used as an alternative deployment path during development and still
+works if you'd rather deploy there instead; it matches how
+CampusVibe/CallBeacon are already hosted:
 
 1. Push this repo to a GitHub repo.
 2. On Render: New → Web Service → connect the repo, root directory
