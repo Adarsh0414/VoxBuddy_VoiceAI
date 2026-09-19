@@ -18,7 +18,7 @@ services:
       # value below to "gemini" and set GEMINI_API_KEY in the dashboard.
       # "anthropic" (direct Anthropic API, not Bedrock) is also available.
       - key: VOXBUDDY_TRANSLATION_PROVIDER
-        value: bedrock
+        value: gemini
       - key: BEDROCK_MODEL_ID
         sync: false
       - key: ANTHROPIC_API_KEY
@@ -34,11 +34,11 @@ services:
       - key: AWS_REGION
         value: us-east-1
       - key: VOXBUDDY_ASR_PROVIDER
-        value: assemblyai
+        value: AWS Transcribe
       - key: ASSEMBLYAI_API_KEY
         sync: false
       - key: VOXBUDDY_TTS_PROVIDER
-        value: elevenlabs
+        value: polly
       - key: ELEVENLABS_API_KEY
         sync: false
       # Leave both unset to start — OTP codes print to Render's log

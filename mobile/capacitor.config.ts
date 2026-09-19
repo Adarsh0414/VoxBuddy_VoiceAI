@@ -6,10 +6,6 @@ import type { CapacitorConfig } from '@capacitor/cli';
 // at your REAL deployed backend URL (server.url mode) rather than
 // bundling www/ as the source of truth. The www/ folder here is a
 // required-but-unused placeholder Capacitor's CLI needs to exist.
-//
-// Replace the placeholder below with your real deployed URL once you've
-// completed Step 1 of docs/PLAY_STORE_PUBLISHING.md (deploy to Render or
-// similar) — see docs/MOBILE_BUILD.md for the full picture.
 const config: CapacitorConfig = {
   appId: 'com.voxbuddy.voiceai',
   appName: 'Voxbuddy_VoiceAi',
