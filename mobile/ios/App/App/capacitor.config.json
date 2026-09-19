@@ -3,8 +3,8 @@
 	"appName": "VoxBuddy",
 	"webDir": "www",
 	"server": {
-		"url": "https://voxbuddy-backend.onrender.com/app",
-		"cleartext": false
+		"url": "http://voxbuddy-env.eba-ixnm7pmc.us-east-1.elasticbeanstalk.com/app",
+		"cleartext": true
 	},
 	"android": {
 		"allowMixedContent": false

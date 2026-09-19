@@ -4,6 +4,27 @@
 // nothing on this page is a canned illustration of what the engine "would"
 // do; it's a live readout of what it just did.
 
+// crypto.randomUUID() only exists in "secure contexts" (HTTPS or
+// localhost). This page is often reached over plain HTTP (e.g. the
+// EB *.elasticbeanstalk.com domain before a cert is attached), so fall
+// back to a manual UUID v4 built on crypto.getRandomValues (which IS
+// available in insecure contexts), or Math.random as a last resort.
+function genUUID() {
+  if (window.crypto && typeof window.crypto.randomUUID === "function") {
+    return window.crypto.randomUUID();
+  }
+  const bytes = new Uint8Array(16);
+  if (window.crypto && typeof window.crypto.getRandomValues === "function") {
+    window.crypto.getRandomValues(bytes);
+  } else {
+    for (let i = 0; i < 16; i++) bytes[i] = Math.floor(Math.random() * 256);
+  }
+  bytes[6] = (bytes[6] & 0x0f) | 0x40; // version 4
+  bytes[8] = (bytes[8] & 0x3f) | 0x80; // variant 10
+  const hex = [...bytes].map((b) => b.toString(16).padStart(2, "0"));
+  return `${hex.slice(0, 4).join("")}-${hex.slice(4, 6).join("")}-${hex.slice(6, 8).join("")}-${hex.slice(8, 10).join("")}-${hex.slice(10, 16).join("")}`;
+}
+
 const logEl = document.getElementById("log");
 const rosterEl = document.getElementById("roster");
 const rosterCountEl = document.getElementById("rosterCount");
@@ -215,7 +236,7 @@ function renderNoisePill(data) {
 }
 
 function connect() {
-  sessionId = crypto.randomUUID();
+  sessionId = genUUID();
   const protocol = location.protocol === "https:" ? "wss" : "ws";
   ws = new WebSocket(`${protocol}://${location.host}/ws/${sessionId}`);
 

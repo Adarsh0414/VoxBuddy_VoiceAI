@@ -31,8 +31,8 @@
 #      whatever internal port this platform version actually uses.
 set -e
 
-DOMAIN="$(/opt/elasticbeanstalk/bin/get-config environment -k VOXBUDDY_HTTPS_DOMAIN)"
-EMAIL="$(/opt/elasticbeanstalk/bin/get-config environment -k VOXBUDDY_HTTPS_EMAIL)"
+DOMAIN="$(/opt/elasticbeanstalk/bin/get-config environment -k VOXBUDDY_HTTPS_DOMAIN 2>/dev/null || true)"
+EMAIL="$(/opt/elasticbeanstalk/bin/get-config environment -k VOXBUDDY_HTTPS_EMAIL 2>/dev/null || true)"
 
 if [ -z "$DOMAIN" ] || [ -z "$EMAIL" ]; then
   echo "VOXBUDDY_HTTPS_DOMAIN and/or VOXBUDDY_HTTPS_EMAIL are not set as " \

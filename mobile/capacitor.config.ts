@@ -17,8 +17,12 @@ const config: CapacitorConfig = {
   server: {
     // "/app" — the bare domain root serves a separate internal CIE debug
     // page (frontend/index.html), not the real app UI (app-preview.html).
-    url: 'https://voxbuddy-backend.onrender.com/app',
-    cleartext: false,
+    url: 'http://voxbuddy-env.eba-ixnm7pmc.us-east-1.elasticbeanstalk.com/app',
+    // cleartext: true because the EB domain is plain HTTP for now (no
+    // cert attached yet — see docs/AWS_INTEGRATION.md). Once HTTPS is
+    // set up, switch the url above back to https:// and set this back
+    // to false.
+    cleartext: true,
   },
   android: {
     allowMixedContent: false,
