@@ -663,7 +663,47 @@ A patient may arrive at a hospital speaking a language that the doctor or nursin
 
 ---
 
-## 22. Future improvements
+## 22. Future Scope: Live Call Translation
+
+> **Status: not yet implemented.** Everything below is a roadmap item with early feasibility research behind it — not a shipped feature. It's documented here so a reviewer can see the next real-world gap VoxBuddy is aimed at and how it would build on what already exists, rather than requiring a new product.
+
+### The problem
+
+VoxBuddy currently solves real-time translation for face-to-face conversations. But the language barrier is often more severe *without* visual context — on a phone call. In a country with 22 official languages, something as routine as calling a hotel, a clinic, or a relative in another state can become impossible if neither person shares a language. This is the next real-world gap VoxBuddy is built to close.
+
+### The plan
+
+Extend VoxBuddy so two people can simply call each other — no app installation needed on either end — and each hears the conversation in their own language, live, as it happens.
+
+Practically, this means introducing a **telephony layer** that streams live call audio into VoxBuddy's existing translation pipeline — the same Conversation Intelligence Engine, streaming ASR, and TTS already built and tested for the in-app experience — rather than building a second, separate product. This is consistent with how the rest of VoxBuddy is already structured: every AI stage sits behind a small interface (`agents/base.py`, see §16), so a phone call is a new **audio transport** feeding the same pipeline, not a rewrite of the CIE, ASR, translation, or TTS stages.
+
+### Feasibility — what we've already validated
+
+Before committing engineering time, we researched whether this is actually buildable, not just conceptually appealing:
+
+- Confirmed that bidirectional live-audio streaming into a phone call is technically achievable — Dial's self-hosted audio protocol proves this pattern works over WebSocket in both directions.
+- Identified that a US-based telephony provider doesn't fit an India-first product (international call costs for domestic users), and instead scoped India-native alternatives (Exotel, Plivo), including their real onboarding requirements (KYC / business registration) and per-minute costs.
+- Mapped where telephony plugs into the existing system: it's a new audio transport, not a rewrite of the translation engine.
+
+### What's left
+
+- Finalize provider choice based on cost vs. onboarding paperwork
+- Extend the CIE's participant model to phone-call semantics (caller / recipient / disconnect states, replacing the in-app "partner / bystander" model with a two-party call model)
+- Build and test a minimal proof-of-concept call, then measure real end-to-end latency
+- Only then integrate into the production pipeline
+
+### Additional considerations for this roadmap item
+
+A few things a judge or a future contributor would reasonably ask about, flagged here rather than left implicit:
+
+- **Consent and disclosure.** Unlike the in-app experience (where both people are using VoxBuddy knowingly), a phone call may connect someone who has never seen VoxBuddy before. Any real implementation needs a clear, audible disclosure at call start (e.g. "this call is being live-translated by VoxBuddy") before any audio is processed.
+- **Telecom compliance.** India-native telephony providers operate under TRAI regulation, and call recording/processing rules vary by use case (business number vs. personal number, IVR vs. relay). This needs a real compliance review with whichever provider is selected — it's out of scope for this hackathon submission, not something assumed to be solved.
+- **Cost model extension.** The per-minute telephony cost (provider-billed) would stack on top of the existing per-minute ASR/translation/TTS cost already tracked in §10 — worth modeling together before committing to a provider, since telephony minutes and AI-inference minutes are billed independently.
+- **Graceful degradation.** If live audio streaming into the call isn't reliably achievable for a given provider/network combination, a lower-fidelity fallback (e.g. a relay-style "press to translate" turn-taking mode, closer to a walkie-talkie than fully live) is a reasonable intermediate step rather than an all-or-nothing bet on full-duplex streaming.
+
+---
+
+## 23. Future improvements
 
 - Real-hardware Bluetooth pairing verification (code is written against `@capacitor-community/bluetooth-le`, untested on physical BLE hardware)
 - Full offline degraded mode (bundled on-device ASR+MT model pair for common phrase pairs when there's no connectivity)
@@ -675,7 +715,7 @@ A patient may arrive at a hospital speaking a language that the doctor or nursin
 
 ---
 
-## 23. Team
+## 24. Team
 
 | Name | Role | GitHub | LinkedIn |
 |---|---|---|---|
@@ -688,7 +728,7 @@ A patient may arrive at a hospital speaking a language that the doctor or nursin
 
 ---
 
-## 24. AI tools used in this build
+## 25. AI tools used in this build
 
 Disclosed per the hackathon's rules on AI tool use.
 
@@ -702,7 +742,7 @@ Disclosed per the hackathon's rules on AI tool use.
 
 ---
 
-## 25. Links
+## 26. Links
 
 | Resource | Link |
 |---|---|
