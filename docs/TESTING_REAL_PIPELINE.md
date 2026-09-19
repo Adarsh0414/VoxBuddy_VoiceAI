@@ -5,7 +5,7 @@
 > an alternative local-dev configuration. The **currently deployed**
 > backend runs on AWS instead (Amazon Transcribe, Amazon Polly, and
 > Gemini/Bedrock for translation) on **AWS Elastic Beanstalk**, not
-> Render — see `README.md` §6, §18, and §19, and `docs/AWS_INTEGRATION.md`
+> Render — see `README.md` 6, 18, and 19, and `docs/AWS_INTEGRATION.md`
 > / `docs/AWS_DEPLOYMENT.md` for that setup and deployment process. The
 > steps below are still accurate for testing the non-AWS providers
 > locally; just substitute "your Elastic Beanstalk environment" wherever
@@ -48,7 +48,7 @@ On Render, every vendor key in `render.yaml` is marked `sync: false`,
 meaning it has to be pasted into Render's own dashboard (Environment tab)
 manually. On Elastic Beanstalk, the equivalent is setting environment
 properties on the environment (via the EB console or CLI) — see
-`docs/AWS_DEPLOYMENT.md` §5. A backend that works locally but stays silent
+`docs/AWS_DEPLOYMENT.md` 5. A backend that works locally but stays silent
 after deploy is the classic symptom of this step being skipped, on either
 platform.
 

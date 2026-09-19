@@ -30,7 +30,7 @@ These are architectural constraints, not preferences. Every phase must be checke
 5. No requirement to read translated text during a live conversation (text is a fallback/accessibility surface only).
 6. No repeated manual language selection — language is inferred and re-inferred continuously.
 7. Phone remains in pocket/bag; earbuds are the only interface.
-8. If an engineering shortcut requires breaking 1–7, it is rejected — a fallback UX is designed instead (see §6.5).
+8. If an engineering shortcut requires breaking 1–7, it is rejected — a fallback UX is designed instead (see 6.5).
 
 ---
 
@@ -56,9 +56,9 @@ Common thread: **spontaneous, unplanned, two-party spoken conversation** in acou
 3. Users open the app once and put the phone away. The app runs a foreground session (Android foreground service / iOS background audio mode).
 4. User A speaks. Their earbud mic captures audio → phone → Conversation Intelligence Engine (CIE) determines this is "primary speaker, session owner."
 5. When a second, consistent voice is detected addressing the primary speaker (proximity + turn-taking pattern + acoustic cues), the CIE promotes it to "active conversation partner."
-6. Speech from the partner is captured (via the *primary* user's phone mic acting as ambient pickup, since the partner is not required to install anything for a one-sided flow — see §4.1), translated, and played into the primary user's earbuds. If the partner also runs VoxBuddy on their own phone, the pipeline runs symmetrically and both sides get earbud playback of the other's translated speech in their own voice's target language.
-7. Conversation continues with zero taps. If a third-party voice is detected nearby (not the established partner), the CIE ignores it (see §7 — Conversation Intelligence).
-8. If the partner changes (A turns to a new person), the CIE detects the discontinuity and re-establishes a new partner profile automatically, with brief graceful degradation (see §7.6 Recovery).
+6. Speech from the partner is captured (via the *primary* user's phone mic acting as ambient pickup, since the partner is not required to install anything for a one-sided flow — see 4.1), translated, and played into the primary user's earbuds. If the partner also runs VoxBuddy on their own phone, the pipeline runs symmetrically and both sides get earbud playback of the other's translated speech in their own voice's target language.
+7. Conversation continues with zero taps. If a third-party voice is detected nearby (not the established partner), the CIE ignores it (see 7 — Conversation Intelligence).
+8. If the partner changes (A turns to a new person), the CIE detects the discontinuity and re-establishes a new partner profile automatically, with brief graceful degradation (see 7.6 Recovery).
 
 ### 4.1 Symmetric vs. Asymmetric Mode
 This is a product decision with architectural consequences, so it's stated explicitly:
@@ -66,7 +66,7 @@ This is a product decision with architectural consequences, so it's stated expli
 - **Symmetric mode (ideal):** both parties have VoxBuddy + earbuds. Each phone runs its own capture/CIE/playback pipeline for its own user, and the two sessions synchronize over a shared **Conversation Session** on the backend (so context, turn state, and partner identity are shared, not independently re-derived twice).
 - **Asymmetric mode (v1 must support this — it's the realistic first-contact scenario):** only the initiating user has the app. Their phone's mic captures *both* voices (own, via earbud mic which has better SNR/isolation, and the partner's, via phone's ambient mic). The phone plays back translated partner speech into the initiating user's earbuds only; the partner just hears the initiating user's natural voice (untranslated) or, if a speaker/phone-out playback fallback is enabled, a synthesized translation is played aloud from the phone speaker for the partner (this is the one permitted moment the phone may need to be visible — treated as a deliberate, minimal-friction fallback, not the core path).
 
-Asymmetric mode is what makes viral, zero-coordination adoption possible (the shopkeeper doesn't need to have installed anything). It's listed here because it changes the audio architecture (§8) and the CIE's job (§7) significantly, and I'm flagging it now rather than discovering it mid-build.
+Asymmetric mode is what makes viral, zero-coordination adoption possible (the shopkeeper doesn't need to have installed anything). It's listed here because it changes the audio architecture (8) and the CIE's job (7) significantly, and I'm flagging it now rather than discovering it mid-build.
 
 ---
 
@@ -112,7 +112,7 @@ Asymmetric mode is what makes viral, zero-coordination adoption possible (the sh
 
 ## 7. Conversation Intelligence Engine (CIE) — The Core IP
 
-The CIE is the orchestration brain. It does not do ASR/MT/TTS itself — it consumes structured signals from every agent (§8) and maintains the authoritative state of "what is this conversation, right now."
+The CIE is the orchestration brain. It does not do ASR/MT/TTS itself — it consumes structured signals from every agent (8) and maintains the authoritative state of "what is this conversation, right now."
 
 ### 7.1 State Model
 The CIE maintains a per-session **Conversation State Graph**:
@@ -164,7 +164,7 @@ All agents are services (not literal chat "agents" in the LLM-persona sense) com
 | **Noise Intelligence Agent** | Real-time denoising, echo cancellation, wind/handling-noise suppression | On-device DSP + learned denoiser (e.g. RNNoise-class model, on-device); cloud-side heavier denoiser as fallback for asymmetric-mode phone-mic capture |
 | **Audio Processing Agent** | VAD, endpointing, audio chunking/framing, resampling, buffering for streaming | On-device VAD (WebRTC VAD / Silero-class), streaming framer |
 | **Speaker Identification Agent** | Voice embeddings, diarization, per-speaker fingerprint tracking within a session | Streaming speaker-embedding model (d-vector/x-vector class), session-scoped only (no persistent biometric storage by default — privacy) |
-| **Conversation Intelligence Agent (CIE)** | Central orchestration — see §7 | Rule+ML hybrid fusion, hysteresis state machine |
+| **Conversation Intelligence Agent (CIE)** | Central orchestration — see 7 | Rule+ML hybrid fusion, hysteresis state machine |
 | **Context Memory Agent** | Maintains rolling semantic summary, resolves pronouns/ellipsis, supplies domain-term bias to ASR/MT | Lightweight rolling summarizer, short-context embedding store |
 | **Language Detection Agent** | Per-utterance spoken-language ID, confidence-scored, updates continuously (users can code-switch) | Streaming LID model |
 | **Translation Agent** | Context-aware MT, using TurnHistory + ConversationTopic as conditioning, not sentence-isolated MT | Streaming/incremental NMT (foundation MT API augmented with context injection) |
@@ -243,7 +243,7 @@ Design principle: **the hot path (audio in → translated audio out) is a pure s
 - **Framing:** 20–30ms frames, streamed continuously to the on-device VAD; only speech-active segments are forwarded upstream (bandwidth + privacy + cost).
 - **Transport:** Opus-encoded audio over a bidirectional gRPC stream (low overhead, good compression at speech bitrates, wide platform support), TLS 1.3.
 - **Playback:** Translated audio streamed back and played through the same Bluetooth route with jitter-buffer smoothing (~150–300ms adaptive buffer) to protect against network variance without materially harming the latency budget.
-- **Earbud disconnect handling:** OS-level route-change notifications trigger the fallback path in §6.5.
+- **Earbud disconnect handling:** OS-level route-change notifications trigger the fallback path in 6.5.
 - **Asymmetric-mode dual-voice capture:** phone's built-in mic array (when available) used with beamforming/AGC tuned differently than the earbud path (further-field, more reverberant) — this is a materially different acoustic problem from near-field earbud capture and is treated as a separate tuning profile in the Noise Intelligence Agent, not the same model.
 
 ---
@@ -262,7 +262,7 @@ Design principle: **the hot path (audio in → translated audio out) is a pure s
 
 - **Language/runtime:** Go for the low-latency streaming gateway and Conversation Session Service (predictable GC, excellent gRPC/streaming support, strong concurrency model for many long-lived bidi streams). Python for the AI orchestration layer and any custom model-serving glue (ecosystem fit), behind the same gRPC contracts.
 - **Orchestration layer:** CIE and the agent fan-out implemented as a set of independently scalable microservices communicating over gRPC streaming + an event bus (e.g., a Kafka-class log) for state events that multiple consumers (Analytics, Accessibility, Privacy) need without coupling to the hot path.
-- **AI inference:** managed/hosted foundation models for ASR, MT, TTS (build vs. buy: buy first for v1 to hit quality/latency bar fast; invest in custom fine-tuning only where the CIE's conversation-specific signals — speaker ID, partner tracking — aren't well served by any off-the-shelf API, which is precisely the multi-agent architecture in §8).
+- **AI inference:** managed/hosted foundation models for ASR, MT, TTS (build vs. buy: buy first for v1 to hit quality/latency bar fast; invest in custom fine-tuning only where the CIE's conversation-specific signals — speaker ID, partner tracking — aren't well served by any off-the-shelf API, which is precisely the multi-agent architecture in 8).
 - **Session service:** owns the Conversation State Graph, backed by an in-memory store (Redis) for hot session state + async persistence to a durable store for opted-in history.
 - **API Gateway:** regional edge deployment (multiple regions) purely to keep RTT within the latency budget — this is a latency-driven infra requirement, not a nice-to-have.
 
@@ -309,7 +309,7 @@ Default posture: **Turn-level text/audio is NOT retained** unless the user opts 
 - **Containerization:** all services containerized (Docker), orchestrated via Kubernetes, with the streaming gateway and CIE services running as low-latency-tuned deployments (dedicated node pools, no noisy-neighbor CPU throttling).
 - **CI/CD:** GitHub Actions — build/test/lint on PR, staged rollout (canary → regional → global) for backend services; mobile app releases via standard store pipelines with phased rollout.
 - **IaC:** Terraform for all cloud resources — no manual console changes.
-- **Monitoring:** Prometheus + Grafana for service metrics, distributed tracing (OpenTelemetry) across the hot path specifically to keep the latency budget (§6) honest and debuggable per-stage.
+- **Monitoring:** Prometheus + Grafana for service metrics, distributed tracing (OpenTelemetry) across the hot path specifically to keep the latency budget (6) honest and debuggable per-stage.
 - **Logging:** structured logs, PII-redacted by default, correlated by session_id/trace_id.
 - **Alerting:** latency SLO burn-rate alerts (this product's core promise is latency — alerting must be tuned tighter here than a typical app).
 
@@ -319,11 +319,11 @@ Default posture: **Turn-level text/audio is NOT retained** unless the user opts 
 
 - **Unit/integration:** standard coverage for all services, especially CIE decision logic (this is the most bug-prone, highest-value-to-test component — many small unit tests around partner-switch/hysteresis/recovery logic).
 - **Audio-specific test harness:** a corpus of recorded multi-speaker, multi-noise-environment audio (airport, restaurant, market, quiet room) used as regression tests for the whole pipeline — noise robustness is a product-defining metric, not a nice-to-have.
-- **Latency testing:** automated per-stage latency benchmarking in CI against the §6 budget; regressions block release.
+- **Latency testing:** automated per-stage latency benchmarking in CI against the 6 budget; regressions block release.
 - **Load/scale testing:** simulated concurrent sessions to validate autoscaling and regional routing.
-- **Field testing:** structured real-world testing in each target environment (§4) before each major release — lab testing alone will not validate the CIE's partner-tracking behavior.
+- **Field testing:** structured real-world testing in each target environment (4) before each major release — lab testing alone will not validate the CIE's partner-tracking behavior.
 - **Accessibility testing:** screen reader + WCAG audits each release.
-- **Failure-injection testing:** forced earbud disconnects, network drops, mid-conversation partner switches — verifying graceful, non-visual recovery per §6.5/§7.6.
+- **Failure-injection testing:** forced earbud disconnects, network drops, mid-conversation partner switches — verifying graceful, non-visual recovery per 6.5/7.6.
 
 ---
 
@@ -363,10 +363,10 @@ pairing verification, and Phase 5 in full.
 **Phase 2 — Conversation Intelligence v1**
 - Real speaker diarization + partner tracking + bystander rejection
 - Noise Intelligence Agent (real environments, not quiet rooms)
-- Hysteresis/recovery logic (§7.5–7.6)
+- Hysteresis/recovery logic (7.5–7.6)
 
 **Phase 3 — Asymmetric Mode + Mobile Polish**
-- Single-app-holder flow (§4.1)
+- Single-app-holder flow (4.1)
 - Full mobile UI (minimal, accessible)
 - Bluetooth edge-case hardening (disconnects, route changes)
 
@@ -384,7 +384,7 @@ pairing verification, and Phase 5 in full.
 
 ## 20. Open Research Questions (tracked, not blocking)
 
-1. Optimal fusion weighting for partner-identification signals (§7.2) — needs real-world data to tune, not guessable from first principles.
+1. Optimal fusion weighting for partner-identification signals (7.2) — needs real-world data to tune, not guessable from first principles.
 2. Where the on-device vs. cloud line should sit for denoising/diarization as edge hardware capability improves (battery/latency/privacy tradeoff).
 3. Voice-matched TTS (translated speech in the *user's own* vocal timbre) — desirable, but consent/deepfake-risk implications need explicit product review before building.
 4. Beamforming reliance for phone-mic asymmetric mode — device fragmentation across Android OEMs makes this inconsistent; needs a robustness fallback strategy.
@@ -395,5 +395,5 @@ pairing verification, and Phase 5 in full.
 ## 21. What This Document Deliberately Does Not Do
 
 - It does not specify exact model vendors/API providers — that's a Phase 1 build-time decision based on live latency/cost/quality benchmarking, not something to lock in on paper.
-- It does not introduce any manual-interaction UX pattern anywhere, per §2.
+- It does not introduce any manual-interaction UX pattern anywhere, per 2.
 - It does not design proprietary hardware — v1 is software-only per the brief.

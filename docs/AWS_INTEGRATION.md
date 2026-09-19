@@ -62,7 +62,7 @@ model-family-agnostic: pointing `BEDROCK_MODEL_ID` at a different model
 family (Anthropic, Amazon Nova, Meta, etc.) needs no code change here.
 Same context-injection prompt design as the Anthropic/Gemini adapters
 (recent turn history resolves pronouns/ellipsis consistently, per FR-6 —
-see docs/vendor_decision.md §2).
+see docs/vendor_decision.md 2).
 
 The code defaults `VOXBUDDY_TRANSLATION_PROVIDER` to `bedrock`, and
 Bedrock reuses the same `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` /
@@ -335,9 +335,9 @@ See `backend/.env.example` for the exact environment variables
 
 **Currently applied** — the actual `voxbuddy-backend-policy` attached to
 the deployed IAM user *does* include the full Bedrock statement set
-below, alongside Polly, Transcribe, and DynamoDB (see `README.md` §6.5
+below, alongside Polly, Transcribe, and DynamoDB (see `README.md` 6.5
 for the single authoritative copy with `Sid`s). Having this policy
-correct turned out to be necessary but not sufficient — per §0 above,
+correct turned out to be necessary but not sufficient — per 0 above,
 the actual block on `VOXBUDDY_TRANSLATION_PROVIDER=bedrock` sits on
 AWS's Marketplace/billing side, not in IAM, which this policy alone
 doesn't fix.

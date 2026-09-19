@@ -15,7 +15,7 @@ your app forever.
 ## Step 1 — Deploy to a real HTTPS URL
 
 TWA requires your app to be live on the public internet, not `localhost`.
-Current hackathon deployment: AWS Elastic Beanstalk (see `README.md` §19
+Current hackathon deployment: AWS Elastic Beanstalk (see `README.md` 19
 and `docs/AWS_DEPLOYMENT.md`) — if you're publishing from the existing
 deployment, you can skip straight to Step 2 using that URL. Render was
 used as an alternative deployment path during development and still

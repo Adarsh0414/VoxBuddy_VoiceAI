@@ -256,7 +256,7 @@ This account also has a live, AWS-confirmed $100 hackathon credit (WeMakeDevs, c
 
 **What the deployed app actually runs on instead:** `VOXBUDDY_TRANSLATION_PROVIDER=gemini` with a personal `GEMINI_API_KEY` — the same Gemini integration that was VoxBuddy's original, real-device-tested translation path before the Bedrock adapter was added. Nothing about the CIE, ASR, TTS, or persistence layers changed to make this work — the provider abstraction in `agents/base.py` is exactly what made this a one-line config swap instead of a rewrite.
 
-**IAM:** the `bedrock:InvokeModel` + `aws-marketplace:*` statements are included in the live `voxbuddy-backend-policy`, ahead of §6.5's policy actually working end-to-end — they're necessary but, per the above, not sufficient on their own.
+**IAM:** the `bedrock:InvokeModel` + `aws-marketplace:*` statements are included in the live `voxbuddy-backend-policy`, ahead of 6.5's policy actually working end-to-end — they're necessary but, per the above, not sufficient on their own.
 
 ---
 
@@ -281,7 +281,7 @@ This account also has a live, AWS-confirmed $100 hackathon credit (WeMakeDevs, c
                                                     │  Translation Agent         │
                                                     │  (Gemini, active; Bedrock  │
                                                     │   implemented, blocked —   │
-                                                    │   see §6.7)                │
+                                                    │   see 6.7)                │
                                                     │        │ translated text   │
                                                     │        ▼                   │
                                                     │  Amazon Polly              │
@@ -402,12 +402,12 @@ Every AWS-backed test file uses [`moto`](https://github.com/getmoto/moto) (AWS's
 | **Translation (deployed)** | **Google Gemini** (`VOXBUDDY_TRANSLATION_PROVIDER=gemini`) - context-aware; [Amazon Bedrock](https://aws.amazon.com/bedrock/) is the code default and fully implemented but currently blocked at the AWS account level (see 6.7); [Anthropic Claude](https://www.anthropic.com/) is a third optional provider |
 | **Text-to-speech (deployed)** | **Amazon Polly** |
 | **Conversation history (deployed)** | **Amazon DynamoDB** |
-| Local dev fallback | ElevenLabs (TTS) and SQLite (history) - used only for offline/no-AWS-account development, see §6.4 |
+| Local dev fallback | ElevenLabs (TTS) and SQLite (history) - used only for offline/no-AWS-account development, see 6.4 |
 | Auth | Custom OTP (SMTP or Brevo for email, Fast2SMS or Brevo for SMS) + Google Sign-In (verified server-side against Google's public keys) |
 | Session storage | SQLite (default) or Redis (optional, for scaling auth tokens) |
 | Frontend | Vanilla JS single-page app, PWA (manifest + service worker) |
 | Mobile shell | [Capacitor](https://capacitorjs.com/) - real Android Studio/Gradle project + Xcode project |
-| **Deployment (live)** | **AWS Elastic Beanstalk** (single-instance EC2 environment, see §19) |
+| **Deployment (live)** | **AWS Elastic Beanstalk** (single-instance EC2 environment, see 19) |
 | Deployment (alternative) | [Render](https://render.com/) (`render.yaml` blueprint included, not the currently live deployment) |
 | Testing | pytest — 276 backend tests (270 passing, 6 skipped) |
 
@@ -519,7 +519,7 @@ AWS_REGION=us-east-1
 DYNAMODB_TABLE_PREFIX=voxbuddy
 ```
 
-This is the configuration the deployed app runs with. The IAM user needs the policy in §6.5 — note that policy must include `transcribe:StartStreamTranscription` for the ASR leg, in addition to the Polly/DynamoDB permissions. DynamoDB's three tables are created automatically on startup; there's no separate table-creation step.
+This is the configuration the deployed app runs with. The IAM user needs the policy in 6.5 — note that policy must include `transcribe:StartStreamTranscription` for the ASR leg, in addition to the Polly/DynamoDB permissions. DynamoDB's three tables are created automatically on startup; there's no separate table-creation step.
 
 ### Other providers
 
@@ -593,7 +593,7 @@ flowchart TD
         Polly["Amazon Polly<br/>text-to-speech"]
         Transcribe["Amazon Transcribe<br/>streaming speech-to-text"]
         Dynamo["Amazon DynamoDB<br/>conversation history"]
-        Bedrock["Amazon Bedrock<br/>translation (implemented,<br/>blocked at account level — §6.7)"]
+        Bedrock["Amazon Bedrock<br/>translation (implemented,<br/>blocked at account level — 6.7)"]
         CW["Amazon CloudWatch<br/>CIE metrics (optional, off by default)"]
     end
 
@@ -652,7 +652,7 @@ VoxBuddy currently solves real-time translation for face-to-face conversations. 
 
 Extend VoxBuddy so two people can simply call each other - no app installation needed on either end — and each hears the conversation in their own language, live, as it happens.
 
-Practically, this means introducing a **telephony layer** that streams live call audio into VoxBuddy's existing translation pipeline - the same Conversation Intelligence Engine, streaming ASR, and TTS already built and tested for the in-app experience - rather than building a second, separate product. This is consistent with how the rest of VoxBuddy is already structured: every AI stage sits behind a small interface (`agents/base.py`, see §16), so a phone call is a new **audio transport** feeding the same pipeline, not a rewrite of the CIE, ASR, translation, or TTS stages.
+Practically, this means introducing a **telephony layer** that streams live call audio into VoxBuddy's existing translation pipeline - the same Conversation Intelligence Engine, streaming ASR, and TTS already built and tested for the in-app experience - rather than building a second, separate product. This is consistent with how the rest of VoxBuddy is already structured: every AI stage sits behind a small interface (`agents/base.py`, see 16), so a phone call is a new **audio transport** feeding the same pipeline, not a rewrite of the CIE, ASR, translation, or TTS stages.
 
 ### Feasibility — what we've already validated
 
@@ -685,7 +685,7 @@ A few things a judge or a future contributor would reasonably ask about, flagged
 - Real-hardware Bluetooth pairing verification (code is written against `@capacitor-community/bluetooth-le`, untested on physical BLE hardware)
 - Full offline degraded mode (bundled on-device ASR+MT model pair for common phrase pairs when there's no connectivity)
 - Speaker diarization / voice embeddings with a real vendor (currently mocked; AssemblyAI's inline diarization is the planned first real source)
-- Additional AWS options: Amazon Translate/Bedrock as further AWS-native pipeline stages, extending the same adapter pattern already used for Polly, DynamoDB, and Transcribe (`backend/agents/asr_transcribe.py`, `VOXBUDDY_ASR_PROVIDER=aws_transcribe`). Now configured and in active use against a real AWS account — but still has no automated test coverage against a mocked AWS backend the way Polly/DynamoDB do (`moto` doesn't support Transcribe's real-time streaming API; see §6.3/docs/AWS_INTEGRATION.md), so validate its actual transcription/diarization output against real speech before fully trusting it in production, the same caveat as the AssemblyAI adapter always carried.
+- Additional AWS options: Amazon Translate/Bedrock as further AWS-native pipeline stages, extending the same adapter pattern already used for Polly, DynamoDB, and Transcribe (`backend/agents/asr_transcribe.py`, `VOXBUDDY_ASR_PROVIDER=aws_transcribe`). Now configured and in active use against a real AWS account — but still has no automated test coverage against a mocked AWS backend the way Polly/DynamoDB do (`moto` doesn't support Transcribe's real-time streaming API; see 6.3/docs/AWS_INTEGRATION.md), so validate its actual transcription/diarization output against real speech before fully trusting it in production, the same caveat as the AssemblyAI adapter always carried.
 - Expand the Polly voice map beyond the current 15 languages
 - Cost-optimization pass on inference spend once real usage data exists (per the PRD's tracked NFR)
 - Google Play Store publishing (guide ready in `docs/PLAY_STORE_PUBLISHING.md`)
@@ -715,7 +715,7 @@ Disclosed per the hackathon's rules on AI tool use.
 | **ChatGPT** | Debugging support and a second opinion on trickier issues - streaming ASR edge cases, IAM policy scoping |
 | **Manual debugging** | The majority of hands-on testing - anything touching real hardware (Bluetooth pairing, live mic input) and the CIE's signal-fusion behavior - was verified by hand against real audio and test scenarios, since this is the part no AI tool has context on |
 
-**What AI tools did *not* do:** design the Conversation Intelligence Engine's partner-identification approach, choose the AWS services in §6, or write the CIE's test scenarios (`backend/cie/`). Those are our own decisions, implemented with AI tools speeding up the typing, not the thinking.
+**What AI tools did *not* do:** design the Conversation Intelligence Engine's partner-identification approach, choose the AWS services in 6, or write the CIE's test scenarios (`backend/cie/`). Those are our own decisions, implemented with AI tools speeding up the typing, not the thinking.
 
 ---
 

@@ -5,7 +5,7 @@ on AWS. It complements `docs/AWS_INTEGRATION.md`, which explains what each
 AWS service does *inside* the application (Polly, DynamoDB, Transcribe,
 Bedrock, CloudWatch, S3); this document covers the deployment platform
 itself — where the process runs, how it starts, how HTTPS is terminated,
-and how permissions are granted. See `README.md` §19 for the condensed
+and how permissions are granted. See `README.md` 19 for the condensed
 version of this same content with an architecture diagram.
 
 No AWS account IDs, access keys, secret values, or private endpoints are
@@ -81,10 +81,10 @@ The deployed EC2 instance authenticates to AWS services using credentials
 supplied as environment variables (`AWS_ACCESS_KEY_ID`,
 `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`), read automatically by `boto3`'s
 default credential chain. The IAM policy attached to that identity grants
-exactly the actions the application's code calls — see `README.md` §6.5
+exactly the actions the application's code calls — see `README.md` 6.5
 for the full JSON (Polly, Transcribe, scoped DynamoDB table access, and
 the Bedrock/AWS Marketplace actions needed for the not-yet-unblocked
-Bedrock translation path, §6.7). It does **not** grant S3 or CloudWatch
+Bedrock translation path, 6.7). It does **not** grant S3 or CloudWatch
 actions unless those optional features are explicitly turned on — see
 `docs/AWS_INTEGRATION.md` for the additional statements those need.
 
@@ -96,12 +96,12 @@ placeholders.
 
 Environment variables are set as EB environment properties (not committed
 to the repo). The variable **names** used by the deployed configuration
-are documented in `backend/.env.example` and `README.md` §18 — set
+are documented in `backend/.env.example` and `README.md` 18 — set
 `VOXBUDDY_TTS_PROVIDER=polly`, `VOXBUDDY_PERSISTENCE_PROVIDER=dynamodb`,
 and `VOXBUDDY_ASR_PROVIDER=aws_transcribe` alongside the shared AWS
 credentials to reproduce the deployed configuration. Translation currently
 runs on `VOXBUDDY_TRANSLATION_PROVIDER=gemini` rather than the code's
-`bedrock` default — see README §6.7 for the (AWS-account-side, not
+`bedrock` default — see README 6.7 for the (AWS-account-side, not
 code-side) reason.
 
 ## 6. Health checks and monitoring
