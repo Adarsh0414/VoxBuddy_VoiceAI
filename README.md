@@ -21,8 +21,8 @@ VoxBuddy listens through your Bluetooth earbuds, figures out who you're actually
 | Resource | Link |
 |---|---|
 | 🎥 Demo video | `[ADD LINK]` |
-| 📱 Android APK | `https://github.com/Adarsh0414/VoxBuddy_VoiceAI/releases/download/v1.0.0/VoxBuddy_VoiceAi.apk` |
-| 🖥️ Backend API (deployed) | `http://voxbuddy-env.eba-ixnm7pmc.us-east-1.elasticbeanstalk.com/?utm_source=chatgpt.com` |
+| 📱 Android APK | [VoxBuddy_VoiceAi v1.0.0](https://github.com/Adarsh0414/VoxBuddy_VoiceAI/releases/download/v1.0.0/VoxBuddy_VoiceAi.apk) |
+| 🖥️ Backend API (deployed) | [VoxBuddy-CIE_Live_Cockpit](http://voxbuddy-env.eba-ixnm7pmc.us-east-1.elasticbeanstalk.com/?utm_source=chatgpt.com) |
 
 ---
 
