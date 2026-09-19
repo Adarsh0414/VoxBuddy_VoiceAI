@@ -2,9 +2,9 @@
 
 # VoxBuddy
 
-**Real-time, hands-free speech translation for travelers — talk, and let your earbuds do the rest.**
+**Real-Time, Hands-Free AI Speech Translation for Natural Multilingual Conversations — talk, and let your earbuds do the rest.**
 
-*Powered by Amazon Polly and Amazon DynamoDB.*
+*Deployed on AWS — powered by Amazon Polly, Amazon DynamoDB, and Amazon Transcribe.*
 
 </div>
 
@@ -28,11 +28,23 @@ VoxBuddy listens through your Bluetooth earbuds, figures out who you're actually
 
 ## 3. Problem
 
-Language barriers become especially difficult in real-world conversations, where people need to communicate naturally without constantly looking at a phone or manually selecting speakers and languages.
+Language barriers become especially difficult in real-world conversations, where two people need to communicate but don't share a common language — and where stopping to fumble with a phone is slow, awkward, or simply not an option.
 
-Existing translation apps make you stop the conversation, pull out your phone, hold it up like a walkie-talkie, and hand it back and forth. That's slow, awkward, and breaks eye contact exactly when you need it most — asking for directions, haggling at a market, checking into a guesthouse, or just having a real conversation with someone who doesn't share your language.
+> Imagine a patient entering a hospital and speaking a language that the doctor or staff do not understand. Instead of forcing either person to manually select languages, type messages, or repeatedly switch translation modes, VoxBuddy can help bridge the conversation through real-time voice translation.
 
-The hard part hiding inside that problem isn't translation quality — machine translation is commodity-adjacent in 2026. It's **figuring out who is actually talking to you in the first place.** A live mic in a crowded market picks up the shopkeeper, the shopkeeper's kid, a nearby vendor, and the user's own voice, all mixed together. Naively translating everything produces a stream of garbage and gets it wrong the moment a third party interrupts.
+This isn't just a travel problem, and VoxBuddy isn't just a generic translator app. The same friction shows up anywhere two people need to have a real, spoken conversation across a language gap:
+
+- **Healthcare** — a patient describing symptoms to a doctor or nurse who doesn't speak their language
+- **Travel** — asking for directions, haggling at a market, checking into a guesthouse
+- **Education** — a student and teacher, or classmates, who don't share a first language
+- **Customer service** — a support agent and a customer on a call or at a counter
+- **Multilingual communities and cross-language teams** — neighbors, colleagues, or public-service staff who need to communicate day to day
+
+Existing translation apps make you stop the conversation, pull out your phone, hold it up like a walkie-talkie, and hand it back and forth — typing, tapping a language picker, and repeating it for every turn. That breaks eye contact and momentum exactly when it matters most, whether that's a tense moment in a hospital corridor or a fast-moving conversation at a market stall.
+
+The hard part hiding inside that problem isn't translation quality — machine translation is commodity-adjacent in 2026. It's **figuring out who is actually talking to you in the first place.** A live mic in a crowded room picks up the other speaker, a passerby, a third person joining the conversation, and the user's own voice, all mixed together. Naively translating everything produces a stream of garbage and gets it wrong the moment a third party interrupts.
+
+VoxBuddy is a communication tool, not a medical device — in a healthcare setting it helps people talk to each other, and any clinical decision still rests with clinical staff using their own judgment.
 
 ---
 
@@ -73,7 +85,7 @@ VoxBuddy's deployed pipeline runs on AWS:
 - **Amazon DynamoDB stores VoxBuddy's conversation history and usage data.** Every saved conversation, day-streak, per-language count, and stats screen reads from and writes to DynamoDB.
 - **Amazon Transcribe powers VoxBuddy's real-time speech-to-text.** When `VOXBUDDY_ASR_PROVIDER=aws_transcribe` is set, live microphone audio is streamed straight to Transcribe instead of a third-party ASR vendor.
 
-`[ADD PLACEHOLDER — confirm/adjust this line once deployed, e.g. "Deployed on Render, backend calls out to Polly and DynamoDB in us-east-1."]`
+**Deployed on AWS Elastic Beanstalk** (single-instance EC2 environment, `us-east-1`) — the backend calls out to Amazon Polly, Amazon DynamoDB, and Amazon Transcribe from that instance. See §19 for the full deployment architecture.
 
 ### 6.1 Amazon Polly — text-to-speech
 
@@ -220,9 +232,11 @@ This policy does **not** grant `cloudwatch:PutMetricData` or any `s3:*` actions 
 | Resource | Value |
 |---|---|
 | AWS Region | `us-east-1` |
-| AWS Services used | Amazon Bedrock, Amazon Polly, Amazon DynamoDB, Amazon Transcribe |
+| Deployment platform | AWS Elastic Beanstalk (single-instance EC2 environment) — see §19 |
+| AWS Services used (pipeline) | Amazon Bedrock (implemented, not yet reachable — §6.7), Amazon Polly, Amazon DynamoDB, Amazon Transcribe |
+| AWS Services used (optional, off by default) | Amazon CloudWatch, Amazon S3 — see `docs/AWS_INTEGRATION.md` §4–5 |
 | DynamoDB Tables | `voxbuddy_conversations`, `voxbuddy_turns`, `voxbuddy_counters` (prefix via `DYNAMODB_TABLE_PREFIX`) |
-| Architecture diagram (AWS-focused) | `[ADD LINK]` |
+| Architecture diagram (AWS-focused) | See §19.5 (Mermaid diagram, rendered inline in this README) |
 
 See `docs/AWS_INTEGRATION.md` for the full write-up, including how a real `moto`-backed test run against Polly's voice catalog caught a real bug before production (the French voice was mapped to `"Lea"` instead of Polly's actual voice id `"Léa"`).
 
@@ -320,16 +334,27 @@ Adding another language is a one-line addition to `VOICE_MAP` in `backend/agents
 
 ---
 
-## 9. 🚀 First Commit contribution
+## 9. 🚀 WeMakeDevs × AWS First Commit 2026
 
-`[ADD PLACEHOLDER — link to the first commit / initial scaffold, and a short note on what shipped in it, e.g.:]`
+VoxBuddy was built and submitted as part of **First Commit**, a hackathon run by **WeMakeDevs** in partnership with **AWS**, as part of the **Bharat Builds Tour**. First Commit ran **September 17–20, 2026**, in teams of 1–4, hybrid — online across India, with an optional in-person hack day in Bangalore on September 19, 2026.
 
 | | |
 |---|---|
-| First commit | `[ADD LINK]` |
-| Date | `[ADD DATE]` |
-| What it established | `[ADD PLACEHOLDER — e.g. "FastAPI skeleton, mock agent interfaces, PRD"]` |
-| Contributor | `[ADD NAME / GitHub handle]` |
+| First commit | `bcd76ce` — "Initial commit" |
+| Date | 2026-09-18 |
+| What it established | Initial FastAPI backend skeleton, mock agent interfaces (ASR/translation/TTS), the CIE scaffold, and the project's frontend/PRD baseline |
+| Event page | [wemakedevs.org/aws/first-commit](https://www.wemakedevs.org/aws/first-commit) |
+
+**Why VoxBuddy fits "Ship It":** the event's AWS track rewards projects that are actually deployed on AWS, not just prototyped. VoxBuddy's backend runs on **AWS Elastic Beanstalk**, its text-to-speech runs on **Amazon Polly**, its conversation history runs on **Amazon DynamoDB**, and its live speech-to-text runs on **Amazon Transcribe** — all four are genuinely in the request path of the deployed app, not a demo-only integration. See §19 for the full deployment writeup.
+
+This README is written against the judging dimensions the event describes:
+
+- **Real-world impact** — §22 walks through concrete use cases, led by the healthcare/patient scenario in §3.
+- **Built on AWS** — §6 and §19 document exactly which AWS services are used, why, and how they're wired in.
+- **Learning & execution** — §6.7 documents, in full, the real Bedrock/AWS Marketplace subscription issue hit during the build and how the team worked around it without touching the rest of the pipeline.
+- **Demo** — §12 (User flow) and the "Judges in a hurry" note in §18 point to the fastest way to see the CIE in action.
+
+VoxBuddy has not been confirmed as a prize winner, finalist, or placement in this event as of this writing; this section describes participation and alignment with the event's themes, not a result.
 
 ---
 
@@ -355,12 +380,13 @@ cd backend
 pytest tests/ -v
 ```
 
-**203 tests** covering the CIE's partner-identification logic, streaming pipeline wiring, auth (OTP + Google Sign-In), persistence, TTS/ASR error handling, and session token storage. Notably:
+**276 tests** (270 passing, 6 skipped as of the last verified run) across 26 test files, covering the CIE's partner-identification logic, streaming pipeline wiring, auth (OTP + Google Sign-In), persistence, TTS/ASR error handling, session token storage, and every AWS integration. Notably:
 
 - `test_tts_polly.py` — 4 tests: real audio bytes returned, every mapped language synthesizes, unmapped languages fall back correctly, and the neural→standard engine fallback actually triggers.
 - `test_persistence_dynamodb.py` — 7 tests: save/retrieve, empty-session handling, user-scoped listing, id sequencing, delete-all, ownership lookup, and stats/language-breakdown aggregation — mirroring every scenario the local-dev test suite already covers, so the DynamoDB backend is proven to satisfy the same contract `app.py` depends on.
+- `test_translation_bedrock.py`, `test_cie_cloudwatch_metrics.py`, `test_cie_calibration.py`, `test_cie_calibration_log.py` — cover the Bedrock translation adapter, CloudWatch metrics publishing, and the opt-in S3 calibration-logging flywheel (see `docs/AWS_INTEGRATION.md`).
 
-Both AWS test files use [`moto`](https://github.com/getmoto/moto) (AWS's official mocking library) — no real AWS calls, no cost, and no credentials needed to run the suite.
+Every AWS-backed test file uses [`moto`](https://github.com/getmoto/moto) (AWS's official mocking library) or a mocked client — no real AWS calls, no cost, and no credentials needed to run the suite. The 6 skips are environment-conditional cases (e.g. optional-dependency paths), not failures.
 
 | CI / coverage badge | `[ADD LINK / BADGE]` |
 |---|---|
@@ -392,18 +418,20 @@ Both AWS test files use [`moto`](https://github.com/getmoto/moto) (AWS's officia
 
 | Layer | Technology |
 |---|---|
-| Backend | Python, FastAPI, WebSockets |
-| Speech-to-text | [AssemblyAI](https://www.assemblyai.com/) streaming API (real-time ASR + inline diarization) |
-| Translation | [Amazon Bedrock](https://aws.amazon.com/bedrock/) (default) — context-aware; [Anthropic Claude](https://www.anthropic.com/) or [Google Gemini](https://ai.google.dev/) API available as optional alternatives |
+| Backend | Python, FastAPI, WebSockets, asynchronous request/audio handling |
+| Audio format | 16 kHz PCM streamed over WebSocket |
+| **Speech-to-text (deployed)** | **Amazon Transcribe** streaming (`VOXBUDDY_ASR_PROVIDER=aws_transcribe`); [AssemblyAI](https://www.assemblyai.com/) streaming API available as an alternative (`assemblyai`) |
+| **Translation (deployed)** | **Google Gemini** (`VOXBUDDY_TRANSLATION_PROVIDER=gemini`) — context-aware; [Amazon Bedrock](https://aws.amazon.com/bedrock/) is the code default and fully implemented but currently blocked at the AWS account level (see §6.7); [Anthropic Claude](https://www.anthropic.com/) is a third optional provider |
 | **Text-to-speech (deployed)** | **Amazon Polly** |
 | **Conversation history (deployed)** | **Amazon DynamoDB** |
 | Local dev fallback | ElevenLabs (TTS) and SQLite (history) — used only for offline/no-AWS-account development, see §6.4 |
-| Auth | Custom OTP (SMTP or Brevo for email, Fast2SMS or Brevo for SMS) + Google Sign-In |
+| Auth | Custom OTP (SMTP or Brevo for email, Fast2SMS or Brevo for SMS) + Google Sign-In (verified server-side against Google's public keys) |
 | Session storage | SQLite (default) or Redis (optional, for scaling auth tokens) |
 | Frontend | Vanilla JS single-page app, PWA (manifest + service worker) |
 | Mobile shell | [Capacitor](https://capacitorjs.com/) — real Android Studio/Gradle project + Xcode project |
-| Deployment | [Render](https://render.com/) (`render.yaml` blueprint included) |
-| Testing | pytest — 203 backend tests |
+| **Deployment (live)** | **AWS Elastic Beanstalk** (single-instance EC2 environment, see §19) |
+| Deployment (alternative) | [Render](https://render.com/) (`render.yaml` blueprint included, not the currently live deployment) |
+| Testing | pytest — 276 backend tests (270 passing, 6 skipped) |
 
 ---
 
@@ -423,7 +451,7 @@ Design choices made specifically because AWS is the deployed platform, not just 
 
 ## 15. What's real vs. what's a mock
 
-The **deployed application uses real Amazon Polly and real Amazon DynamoDB** — both are complete implementations against AWS's documented APIs, not stubs. For local development without an AWS account, the same interfaces fall back to ElevenLabs/SQLite or a zero-config mock, so the app is easy to run and demo offline too. See `PROGRESS.md` for the full, honestly-tracked breakdown of what's been live-tested against real vendor traffic versus what's built-and-correct-but-unverified.
+The **deployed application uses real Amazon Polly, real Amazon DynamoDB, and real Amazon Transcribe** — all are complete implementations against AWS's documented APIs, not stubs. Amazon Bedrock (translation) is also a complete implementation but is currently not the active provider in the deployed build — see §6.7. For local development without an AWS account, the same interfaces fall back to ElevenLabs/SQLite/mocked ASR, so the app is easy to run and demo offline too.
 
 ---
 
@@ -453,7 +481,7 @@ voxbuddy/
 │   ├── persistence_dynamodb.py   Conversation history — Amazon DynamoDB adapter (deployed default)
 │   ├── persistence_store.py      Persistence backend selector (env-var driven)
 │   ├── token_store.py            Session tokens (SQLite or Redis)
-│   └── tests/                    203 pytest tests, incl. moto-based AWS tests
+│   └── tests/                    276 pytest tests, incl. moto-based AWS tests
 ├── frontend/
 │   ├── app-preview.html          ⭐ Current product UI, served at /app — Login, Home, Conversation, History, Settings, plus a pre-login Interactive CIE Demo off the login screen...
 │   ├── product-preview.html      (Early UI prototype/wireframe — historical reference only, superseded by app-preview.html; not linked from the running app)
@@ -466,14 +494,18 @@ voxbuddy/
 │   └── ios/                      Xcode project (Capacitor) — build requires macOS
 ├── docs/
 │   ├── VoxBuddy_PRD_and_Architecture.md
-│   ├── AWS_INTEGRATION.md        Full write-up of the Polly + DynamoDB integrations
+│   ├── AWS_INTEGRATION.md        Full write-up of the Bedrock/Polly/DynamoDB/Transcribe/CloudWatch/S3 integrations
+│   ├── AWS_DEPLOYMENT.md         Elastic Beanstalk deployment architecture & process
 │   ├── vendor_decision.md
 │   ├── MOBILE_BUILD.md
 │   ├── PLAY_STORE_PUBLISHING.md
 │   ├── SECURITY_PRIVACY_REVIEW.md
 │   └── TESTING_REAL_PIPELINE.md
-├── render.yaml                   Render deployment blueprint
-└── PROGRESS.md                   Full build log — what's done, tested, and what's next
+├── .ebextensions/                 Elastic Beanstalk config (HTTPS security group, certbot install)
+├── .platform/hooks/postdeploy/    EB deploy hook — provisions Let's Encrypt TLS on the instance
+├── Procfile                       EB/Foreman-style process declaration (`web: uvicorn ...`)
+├── requirements.txt               Root pointer to backend/requirements.txt (EB's Python platform reads this)
+└── render.yaml                    Render deployment blueprint (alternative platform, not the live deployment)
 ```
 
 ---
@@ -540,11 +572,98 @@ Then open `http://<your-pc-local-ip>:8000/app` from your phone on the same netwo
 
 ### Deploying
 
-`render.yaml` is a ready-to-use [Render](https://render.com/) blueprint — connect the repo, set your real AWS (and other vendor) API keys in Render's dashboard (they're intentionally *not* committed to the blueprint), and it deploys as one FastAPI service serving both the API and the frontend, calling out to Polly and DynamoDB.
+The **live deployment runs on AWS Elastic Beanstalk** — see §19 for the full architecture and deployment process. In short: the repo's root `Procfile` (`web: uvicorn --app-dir backend app:app --host 0.0.0.0 --port 8000`) and root `requirements.txt` (which just points at `backend/requirements.txt`) are what EB's Python platform reads to build and run the app as a single-instance EC2 environment; `.ebextensions/` and `.platform/hooks/postdeploy/` handle the HTTPS security-group rule and Let's Encrypt certificate provisioning.
+
+`render.yaml` is also included as a ready-to-use [Render](https://render.com/) blueprint (connect the repo, set your vendor API keys in Render's dashboard, and it deploys as one FastAPI service) — it works, but it is **not** the platform the currently live deployment runs on; treat it as an alternative/backup deployment path.
 
 ---
 
-## 19. Future improvements
+## 19. ☁️ AWS Architecture & Deployment (Elastic Beanstalk)
+
+This section documents exactly where the backend runs on AWS and how requests reach it. See also `docs/AWS_DEPLOYMENT.md` for a standalone version of this write-up, and §6 for what each AWS service does inside the application.
+
+### 19.1 Where the backend is deployed
+
+The FastAPI backend is deployed to **AWS Elastic Beanstalk** as a **single-instance environment** (no load balancer) running on EB's Python platform, on top of a single **EC2** instance:
+
+- **Procfile** (`web: uvicorn --app-dir backend app:app --host 0.0.0.0 --port 8000`) tells EB how to start the app.
+- **Root `requirements.txt`** is a one-line pointer (`-r backend/requirements.txt`) so EB's Python platform installs the exact same dependency set used locally, from a single source of truth.
+- **`.ebextensions/00_install_certbot.config`** installs `certbot`/`certbot-nginx` into an isolated virtualenv on the instance at deploy time.
+- **`.ebextensions/10_open_https_port.config`** adds an inbound rule for port 443 to the environment's security group (EB opens port 80 by default; a single-instance environment has no ELB/ALB in front of it to terminate TLS, so the instance has to do it itself).
+- **`.platform/hooks/postdeploy/00_get_certificate.sh`** runs after every deploy: it requests/renews a free Let's Encrypt certificate via the `webroot` method (so it never needs to guess at EB's managed nginx `server_name` config) and writes a hand-built `server { listen 443 ssl; ... }` nginx block that proxies to the same upstream EB's own HTTP block uses — including the `Upgrade`/`Connection` headers the app's `/ws/*` WebSocket endpoints need. This only activates if the `VOXBUDDY_HTTPS_DOMAIN` and `VOXBUDDY_HTTPS_EMAIL` environment properties are set on the environment; otherwise it's a no-op.
+
+### 19.2 How requests and WebSocket traffic reach the backend
+
+Clients (the web frontend, the PWA, and the native Android app) talk to the single EC2 instance's public `*.elasticbeanstalk.com` hostname (or a custom domain pointed at it) over HTTPS. EB's own nginx reverse-proxies plain HTTP traffic to the uvicorn process on port 8000; the hand-written 443 block from the certbot hook does the same over TLS, forwarding WebSocket upgrade headers so `/ws/{session_id}` and `/ws/{session_id}/audio` work identically over `wss://` as they do locally over `ws://`.
+
+### 19.3 IAM
+
+A dedicated IAM user (`voxbuddy-backend-policy` is the policy name, not a user name — see §6.5 for the full JSON) grants the deployed application exactly the permissions its AWS SDK calls need: `polly:SynthesizeSpeech`/`DescribeVoices`, `transcribe:StartStreamTranscription*`, a scoped set of `dynamodb:*` actions limited to `voxbuddy_*`-prefixed tables, and the Bedrock/AWS Marketplace actions needed for the (currently blocked, see §6.7) Bedrock translation path. Credentials are supplied to the running instance as environment variables (`AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` / `AWS_REGION`), read automatically by `boto3`'s default credential chain — there is no separate VoxBuddy-specific AWS configuration layer. No AWS account IDs, access keys, or secret values are published in this repository or its documentation.
+
+### 19.4 Monitoring / logging
+
+Amazon CloudWatch integration exists in the codebase (`backend/cie/cloudwatch_metrics.py`) for publishing the CIE's own decision metrics (confidence, latency, bystander-rejection rate, partner-switch rate) to the `VoxBuddy/CIE` namespace, but it is **off by default** (`VOXBUDDY_CLOUDWATCH_METRICS=false`) and is not confirmed enabled on the current live deployment. EB itself also provides basic instance/environment health monitoring (CPU, latency, environment health) through its own console, independent of anything in the application code.
+
+### 19.5 Architecture diagram
+
+```mermaid
+flowchart TD
+    U["User<br/>(Web / PWA / Android app)"] -->|HTTPS + WSS| EB
+
+    subgraph AWS["AWS — us-east-1"]
+        EB["Elastic Beanstalk<br/>(single-instance EC2 environment)<br/>nginx (HTTP+TLS) → uvicorn/FastAPI"]
+        IAM["IAM policy<br/>(scoped per-service permissions)"]
+        Polly["Amazon Polly<br/>text-to-speech"]
+        Transcribe["Amazon Transcribe<br/>streaming speech-to-text"]
+        Dynamo["Amazon DynamoDB<br/>conversation history"]
+        Bedrock["Amazon Bedrock<br/>translation (implemented,<br/>blocked at account level — §6.7)"]
+        CW["Amazon CloudWatch<br/>CIE metrics (optional, off by default)"]
+    end
+
+    Gemini["Google Gemini<br/>translation (active provider)"]
+
+    EB -->|"ASR (aws_transcribe)"| Transcribe
+    EB -->|"TTS"| Polly
+    EB -->|"history read/write"| Dynamo
+    EB -.->|"translate (blocked)"| Bedrock
+    EB -->|"translate (active)"| Gemini
+    EB -.->|"metrics (opt-in)"| CW
+    IAM -.->|grants access| EB
+```
+
+The FastAPI process itself runs the full pipeline in-process: WebSocket audio in → streaming ASR (Transcribe) → Conversation Intelligence Engine → translation (Gemini, with Bedrock wired in but not currently reachable) → Amazon Polly → audio back to the client, with each completed conversation written to DynamoDB.
+
+---
+
+## 20. Security
+
+- **Secrets via environment variables only.** All API keys and AWS credentials are read from environment variables (`backend/.env` locally, EB environment properties in production) — never hardcoded, and `.env` is listed in `.gitignore` and confirmed to have no history in the repo's git log.
+- **Authentication.** Passwordless OTP (email/phone) with hashed, single-use, rate-limited, auto-expiring codes, using constant-time comparison (`hmac.compare_digest`) to avoid timing attacks; Google Sign-In is verified server-side against Google's own public keys rather than trusted client-side. A per-IP rate limit (8 requests / 10 minutes) additionally caps OTP-request spam across different identifiers.
+- **AWS IAM least privilege.** The deployed IAM policy (§6.5) grants only the specific actions each integration calls — scoped DynamoDB actions limited to `voxbuddy_*`-prefixed table ARNs, no `dynamodb:*` wildcard, and no `s3:*` or `cloudwatch:PutMetricData` grants unless those optional features are explicitly turned on.
+- **Same-origin by default.** No `CORSMiddleware` is configured, since the frontend and backend are served from the same origin — this means the browser's default same-origin policy applies, and a page on another domain cannot make authenticated requests against the API.
+- **Known, documented tradeoff — auth tokens in `localStorage`.** Session tokens are stored in browser `localStorage` rather than an httpOnly cookie, which means a successful XSS could read a token directly. This is a deliberate, documented decision (not an oversight) because the app runs both in a normal browser tab and inside a Capacitor native WebView pointed at a remote origin, and cookie-based auth across both needs its own dedicated pass. See `docs/SECURITY_PRIVACY_REVIEW.md` for the full reasoning.
+- **`.gitignore` coverage.** `.env`, the local SQLite database file, build artifacts, and mobile signing files (`*.keystore`, `*.jks`) are all excluded from version control.
+- **This documentation does not publish** IAM secret access keys, AWS account IDs, OAuth client secrets, or any other production credential — every code sample uses placeholders (e.g. `<YOUR_ACCOUNT_ID>`, `your_key_here`).
+
+---
+
+## 21. Real-world impact
+
+### Healthcare example
+
+A patient may arrive at a hospital speaking a language that the doctor or nursing staff cannot understand. Instead of stopping to type messages, hand a phone back and forth, or call for an interpreter and wait, VoxBuddy can help facilitate the spoken conversation in real time, letting each person speak and be understood in their own language. VoxBuddy is a communication tool, not a diagnostic or clinical-decision system — it helps people talk to each other; clinical judgment stays with clinical staff.
+
+### Other scenarios
+
+- **Travelers and locals** — asking for directions, negotiating a price, or checking into a place to stay without a shared language.
+- **International students** — following a classroom conversation or talking with classmates and instructors who speak a different first language.
+- **Multilingual customer support** — a support agent and a customer communicating naturally instead of routing through a scripted translation tool.
+- **Public-service interactions** — a resident and a public-service worker (e.g. at a government office or help desk) who don't share a language.
+- **Cross-language teams** — colleagues who default to different first languages having a real, spoken working conversation.
+
+---
+
+## 22. Future improvements
 
 - Real-hardware Bluetooth pairing verification (code is written against `@capacitor-community/bluetooth-le`, untested on physical BLE hardware)
 - Full offline degraded mode (bundled on-device ASR+MT model pair for common phrase pairs when there's no connectivity)
@@ -556,7 +675,7 @@ Then open `http://<your-pc-local-ip>:8000/app` from your phone on the same netwo
 
 ---
 
-## 20. Team
+## 23. Team
 
 | Name | Role | GitHub | LinkedIn |
 |---|---|---|---|
@@ -569,7 +688,7 @@ Then open `http://<your-pc-local-ip>:8000/app` from your phone on the same netwo
 
 ---
 
-## 21. AI tools used in this build
+## 24. AI tools used in this build
 
 Disclosed per the hackathon's rules on AI tool use.
 
@@ -580,3 +699,19 @@ Disclosed per the hackathon's rules on AI tool use.
 | **Manual debugging** | The majority of hands-on testing — anything touching real hardware (Bluetooth pairing, live mic input) and the CIE's signal-fusion behavior — was verified by hand against real audio and test scenarios, since this is the part no AI tool has context on |
 
 **What AI tools did *not* do:** design the Conversation Intelligence Engine's partner-identification approach, choose the AWS services in §6, or write the CIE's test scenarios (`backend/cie/`). Those are our own decisions, implemented with AI tools speeding up the typing, not the thinking.
+
+---
+
+## 25. Links
+
+| Resource | Link |
+|---|---|
+| GitHub repository | [github.com/Adarsh0414/VoxBuddy](https://github.com/Adarsh0414/VoxBuddy) |
+| Deployed backend (AWS Elastic Beanstalk) | [voxbuddy-env.eba-ixnm7pmc.us-east-1.elasticbeanstalk.com](http://voxbuddy-env.eba-ixnm7pmc.us-east-1.elasticbeanstalk.com) |
+| Android APK | [VoxBuddy_VoiceAi v1.0.0](https://github.com/Adarsh0414/VoxBuddy_VoiceAI/releases/download/v1.0.0/VoxBuddy_VoiceAi.apk) |
+| WeMakeDevs × AWS First Commit | [wemakedevs.org/aws/first-commit](https://www.wemakedevs.org/aws/first-commit) |
+| Amazon Polly docs | [docs.aws.amazon.com/polly](https://docs.aws.amazon.com/polly/) |
+| Amazon DynamoDB docs | [docs.aws.amazon.com/dynamodb](https://docs.aws.amazon.com/dynamodb/) |
+| Amazon Transcribe docs | [docs.aws.amazon.com/transcribe](https://docs.aws.amazon.com/transcribe/) |
+| Amazon Bedrock docs | [docs.aws.amazon.com/bedrock](https://docs.aws.amazon.com/bedrock/) |
+| AWS Elastic Beanstalk docs | [docs.aws.amazon.com/elasticbeanstalk](https://docs.aws.amazon.com/elasticbeanstalk/) |

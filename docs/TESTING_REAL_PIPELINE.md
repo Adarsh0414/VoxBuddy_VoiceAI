@@ -1,7 +1,18 @@
 # Testing the real listen → translate → speak pipeline
 
+> **Scope note:** this guide covers the original non-AWS vendor path
+> (AssemblyAI + Anthropic/Gemini + ElevenLabs), which still works today as
+> an alternative local-dev configuration. The **currently deployed**
+> backend runs on AWS instead (Amazon Transcribe, Amazon Polly, and
+> Gemini/Bedrock for translation) on **AWS Elastic Beanstalk**, not
+> Render — see `README.md` §6, §18, and §19, and `docs/AWS_INTEGRATION.md`
+> / `docs/AWS_DEPLOYMENT.md` for that setup and deployment process. The
+> steps below are still accurate for testing the non-AWS providers
+> locally; just substitute "your Elastic Beanstalk environment" wherever
+> this doc says "Render" if you're checking the live deployment instead.
+
 This is the checklist for turning the demo into the real thing — locally,
-and on your deployed Render backend. The mic capture path is now always
+and on a deployed backend. The mic capture path is now always
 real (there's no "demo script" toggle anymore); what varies is whether
 each AI stage is running its zero-config mock or a real vendor.
 
@@ -30,12 +41,16 @@ cp .env.example .env
 # then edit .env and paste in your three keys + confirm voice IDs
 ```
 
-**If you're testing against a deployed backend (Render), setting local
-`.env` is not enough** — Render does not read your local `.env` file.
-Every vendor key in `render.yaml` is marked `sync: false`, meaning it has
-to be pasted into Render's own dashboard (Environment tab) manually,
-separately from local dev. A backend that works locally but stays silent
-after deploy is the classic symptom of this step being skipped.
+**If you're testing against a deployed backend (Render, or an AWS
+Elastic Beanstalk environment for the live deployment), setting local
+`.env` is not enough** — neither platform reads your local `.env` file.
+On Render, every vendor key in `render.yaml` is marked `sync: false`,
+meaning it has to be pasted into Render's own dashboard (Environment tab)
+manually. On Elastic Beanstalk, the equivalent is setting environment
+properties on the environment (via the EB console or CLI) — see
+`docs/AWS_DEPLOYMENT.md` §5. A backend that works locally but stays silent
+after deploy is the classic symptom of this step being skipped, on either
+platform.
 
 ## 4. Run it for real
 
