@@ -2184,6 +2184,62 @@
       scanBtn.style.display = '';
     }
 
+    // Ensures the native Android RECORD_AUDIO permission is actually
+    // requested (not just declared in the manifest) before any
+    // getUserMedia() call is attempted, and gives a specific reason when
+    // mic access can't work at all.
+    //
+    // Two independent things have to both be true for getUserMedia() to
+    // succeed inside the WebView, and previously NEITHER was handled:
+    //   1. The OS-level RECORD_AUDIO permission must be granted. Nothing
+    //      in this app ever called Android's runtime permission request
+    //      for it — the code just assumed the WebView's implicit
+    //      onPermissionRequest handling would somehow surface the system
+    //      dialog. It doesn't reliably, and Android won't even list a
+    //      dangerous permission under Settings > Apps > Permissions until
+    //      the app has explicitly requested it at least once — which
+    //      matches "it didn't ask, and there's no option in Settings
+    //      either." ConversationServicePlugin (native side) now declares
+    //      a "microphone" permission alias, which makes Capacitor
+    //      auto-provide real checkPermissions()/requestPermissions()
+    //      methods that go through ActivityCompat.requestPermissions().
+    //   2. The page must be loaded over a secure context (https://, or
+    //      localhost) — navigator.mediaDevices does not exist at all on
+    //      a plain http:// origin, by browser/WebView spec, regardless
+    //      of any OS permission state. capacitor.config.ts currently
+    //      points server.url at a plain http:// backend URL (cleartext:
+    //      true), so this WILL keep failing — with no permission dialog
+    //      and no getUserMedia() error beyond "not a function" — until
+    //      that backend is served over https and the config is switched
+    //      back to https://. That infra step (ACM cert + HTTPS listener
+    //      on the Elastic Beanstalk environment) has to happen outside
+    //      this app's code.
+    //
+    // Returns { ok: true } or { ok: false, reason: 'insecure-context' |
+    // 'permission-denied' }.
+    async function ensureMicPermission() {
+      if (!window.isSecureContext || !navigator.mediaDevices) {
+        return { ok: false, reason: 'insecure-context' };
+      }
+      if (isNativePlatform() && window.Capacitor.Plugins.ConversationService) {
+        const svc = window.Capacitor.Plugins.ConversationService;
+        try {
+          let status = await svc.checkPermissions();
+          if (status.microphone !== 'granted') {
+            status = await svc.requestPermissions({ permissions: ['microphone'] });
+          }
+          if (status.microphone !== 'granted') {
+            return { ok: false, reason: 'permission-denied' };
+          }
+        } catch (err) {
+          console.warn('Native mic permission check/request failed:', err);
+          // Fall through and let getUserMedia() itself be the source of
+          // truth if the plugin call unexpectedly failed.
+        }
+      }
+      return { ok: true };
+    }
+
     // Requested once here during setup — rather than leaving it to fire
     // on the first "Start Conversation" tap — since the mic is no longer
     // optional (the demo-script toggle is gone; every conversation uses
@@ -2191,6 +2247,11 @@
     // this call only exists to get the OS permission grant recorded; the
     // real capture stream is opened fresh in startMicCapture() per call.
     async function requestMicPermissionUpfront() {
+      const permission = await ensureMicPermission();
+      if (!permission.ok) {
+        console.warn('Microphone permission not available during setup:', permission.reason);
+        return;
+      }
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         stream.getTracks().forEach(t => t.stop());
@@ -3255,6 +3316,21 @@
     // can't read real speech; "assemblyai" (+ ASSEMBLYAI_API_KEY) does.
     async function startMicCapture(sessionId) {
       const statusLine = document.getElementById('convo-status-line');
+
+      const permission = await ensureMicPermission();
+      if (!permission.ok) {
+        if (permission.reason === 'insecure-context') {
+          // Not an Android permission problem at all — getUserMedia()
+          // isn't even exposed on this page because it isn't loaded over
+          // https. See ensureMicPermission() above.
+          statusLine.textContent = 'Microphone unavailable: app isn\u2019t loaded over a secure (HTTPS) connection.';
+        } else {
+          statusLine.textContent = 'Microphone permission denied. Enable it in Settings \u2192 Apps \u2192 VoxBuddy \u2192 Permissions.';
+        }
+        console.warn('Mic capture blocked:', permission.reason);
+        return;
+      }
+
       let stream;
       try {
         stream = await navigator.mediaDevices.getUserMedia({ audio: true });
